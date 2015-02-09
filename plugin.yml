@@ -1,6 +1,9 @@
 name: HardcoreSurvival
 version: 1.0
 main: me.becja10.HardcoreSurvival.Main
-softdepend: [Essentials]
+softdepend: [GriefPrevention]
 description: Hardcore wrapper plugin for servers running GriefPrevention and Essentials
-author: 10becja
+commands:
+  setbase:
+    description: Stores your location so that you can find your way back with a compass
+    usage: /<command>
