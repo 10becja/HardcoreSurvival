@@ -29,6 +29,8 @@ public class Main extends JavaPlugin implements Listener
 	private static Main plugin;
 	private static double FAR = 5000;
 	private static String banMsg = "You've died! Better luck next time.";
+	private static String msgColor = "\u00A7f";
+	private static String coordsColor = "\u00A7f";
 	
 	public static JavaPlugin getInstance() {return plugin;}
 
@@ -46,8 +48,12 @@ public class Main extends JavaPlugin implements Listener
 		this.logger.info(pdfFile.getName() + " Version "+ pdfFile.getVersion() + " Has Been Enabled!");
 	    getServer().getPluginManager().registerEvents(this, this); //register events
 		plugin = this; 
-		//save players.yml file
+		//save file
+	    saveDefaultConfig(); //fail silently if config already exists
 	    FileManager.saveDefaultPlayers();
+	    
+		msgColor = '\u00A7'+getConfig().getString("msgColor");
+		coordsColor = '\u00A7'+getConfig().getString("coordsColor");
 
 	}
 	
@@ -59,7 +65,8 @@ public class Main extends JavaPlugin implements Listener
 		Player p = event.getEntity();
 		p.performCommand("abandonallclaims");
 		//let everyone know where the person died
-		event.setDeathMessage(ChatColor.BLUE+event.getDeathMessage()+ChatColor.BLUE+" at x: " + p.getLocation().getBlockX() + 
+		event.setDeathMessage(msgColor + event.getDeathMessage()+" at"+coordsColor +
+														 " x: " + p.getLocation().getBlockX() + 
 														 " y: " + p.getLocation().getBlockY() +
 														 " z: " + p.getLocation().getBlockZ());
 	}
@@ -164,7 +171,9 @@ public class Main extends JavaPlugin implements Listener
 				//else they haven't stored their home yet, point towards world spawn
 				else
 				{
-					p.setCompassTarget(p.getWorld().getSpawnLocation());
+					//sets their compass to either their last slept in bed (will be set with RandomTP) or spawn if not
+					Location loc = (p.getBedSpawnLocation() == null) ? p.getWorld().getSpawnLocation() : p.getBedSpawnLocation();
+					p.setCompassTarget(loc);
 					p.sendMessage(ChatColor.GOLD+"You haven't set your base coordinates, pointing you to spawn. Set base coordinates with /setbase");
 				}
 			}

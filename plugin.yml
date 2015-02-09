@@ -1,5 +1,5 @@
 name: HardcoreSurvival
-version: 1.0
+version: 1.2
 main: me.becja10.HardcoreSurvival.Main
 softdepend: [GriefPrevention]
 description: Hardcore wrapper plugin for servers running GriefPrevention and Essentials

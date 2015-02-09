@@ -1,0 +1,13 @@
+#------------[HardcoreSurival]------------#
+# A hardcore survival world plugin
+
+# Developed by 10becja
+# Check us out at play.minecraft.dk
+#-----------------------------------------#
+
+#What to color death messages
+#use normal Minecraft color codes 0-9 a-f
+msgColor: f
+
+#You can use this to draw extra attention to the coords
+coordsColor: f
