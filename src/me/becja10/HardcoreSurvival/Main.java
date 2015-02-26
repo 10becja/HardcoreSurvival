@@ -115,7 +115,7 @@ public class Main extends JavaPlugin implements Listener
 		if(announce)
 		{
 			plugin.getServer().dispatchCommand(plugin.getServer().getConsoleSender(),
-							"sync console all hardcoresurvivalannounce "+p.getName());
+							"sync console all hardcoresurvivalannounce " + event.getDeathMessage());
 		}
 		//let everyone know where the person died
 		event.setDeathMessage(prefix+msgColor + event.getDeathMessage()+" at"+prefix+coordsColor +
