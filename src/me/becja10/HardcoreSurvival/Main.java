@@ -48,17 +48,14 @@ public class Main extends JavaPlugin implements Listener
 	public int newbieTimer;						//How long a new player is on the newbie list
 	public boolean announce;					//if there are other servers we should announce to
 	
+	private String configPath = plugin.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
+	private FileConfiguration config = YamlConfiguration.loadConfiguration(new File(configPath));
+	private FileConfiguration outConfig = new YamlConfiguration();
+	
 	public static JavaPlugin getInstance() {return plugin;}
 		
 	private void loadConfig()
-	{
-		String configPath = plugin.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
-
-		//input
-		FileConfiguration config = YamlConfiguration.loadConfiguration(new File(configPath));
-        //output
-		FileConfiguration outConfig = new YamlConfiguration();
-        
+	{        
         //load config, creating defaults if they don't exist
         msgColor = config.getString("msgColor", "f");
         banMsg = config.getString("banMsg", "You've died! Better luck next time.");
@@ -74,15 +71,7 @@ public class Main extends JavaPlugin implements Listener
         outConfig.set("newPlayerProtection", newPlayerProtection);
         outConfig.set("newbieTimer", newbieTimer);
         outConfig.set("announce", announce);
-        
-        try
-        {
-            outConfig.save(configPath);
-        }
-        catch(IOException exception)
-        {
-            logger.info("Unable to write to the configuration file at \"" + configPath + "\"");
-        }
+        save();
 	}
 
 	@Override
@@ -90,6 +79,7 @@ public class Main extends JavaPlugin implements Listener
 	{
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getName() + " Has Been Disabled!");
+		save();
 	}
 	
 	@Override
@@ -146,7 +136,7 @@ public class Main extends JavaPlugin implements Listener
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event)
 	{
-		if(getConfig().getBoolean("newPlayerProtection"))
+		if(newPlayerProtection)
 		{
 			String id = event.getPlayer().getUniqueId().toString();
 			//if they are a new player, give them protection
@@ -163,7 +153,7 @@ public class Main extends JavaPlugin implements Listener
 					{
 						newbies.remove(name); //remove them from the newbie list
 					}
-				}, 20L * getConfig().getInt("newbieTimer") * 60); //number of minutes before they are removed.
+				}, 20L * newbieTimer * 60); //number of minutes before they are removed.
 			}	
 		}
 	}
@@ -313,5 +303,17 @@ public class Main extends JavaPlugin implements Listener
 			}
 		}
 		return true;
+	}
+	
+	private void save()
+	{
+        try
+        {
+            outConfig.save(configPath);
+        }
+        catch(IOException exception)
+        {
+            logger.info("Unable to write to the configuration file at \"" + configPath + "\"");
+        }
 	}
 }
