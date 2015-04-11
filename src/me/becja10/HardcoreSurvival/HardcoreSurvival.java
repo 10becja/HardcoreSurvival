@@ -31,10 +31,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 
-public class Main extends JavaPlugin implements Listener
+public class HardcoreSurvival extends JavaPlugin implements Listener
 {
 	public final Logger logger = Logger.getLogger("Minecraft");
-	private static Main plugin;
+	private static HardcoreSurvival plugin;
 	
 	private static double FAR = 5000;
 	private static String prefix = "\u00A7";
