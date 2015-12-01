@@ -11,3 +11,5 @@ commands:
     description: reloads the player database
     usage: /<command>
     aliases: [hcr]
+  testsend:
+    usage: /<command>

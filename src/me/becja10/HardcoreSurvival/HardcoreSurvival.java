@@ -1,5 +1,9 @@
 package me.becja10.HardcoreSurvival;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,8 +34,9 @@ import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.plugin.messaging.PluginMessageListener;
 
-public class HardcoreSurvival extends JavaPlugin implements Listener
+public class HardcoreSurvival extends JavaPlugin implements Listener, PluginMessageListener
 {
 	public final Logger logger = Logger.getLogger("Minecraft");
 	private static HardcoreSurvival plugin;
@@ -48,9 +53,9 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	public int newbieTimer;						//How long a new player is on the newbie list
 	public boolean announce;					//if there are other servers we should announce to
 	
-	private String configPath = plugin.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
-	private FileConfiguration config = YamlConfiguration.loadConfiguration(new File(configPath));
-	private FileConfiguration outConfig = new YamlConfiguration();
+	private String configPath;
+	private FileConfiguration config;
+	private FileConfiguration outConfig;
 	
 	public static JavaPlugin getInstance() {return plugin;}
 		
@@ -80,6 +85,8 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		PluginDescriptionFile pdfFile = this.getDescription();
 		logger.info(pdfFile.getName() + " Has Been Disabled!");
 		save();
+		ScoreManager.saveScores();
+		FileManager.savePlayers();
 	}
 	
 	@Override
@@ -89,11 +96,63 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		logger.info(pdfFile.getName() + " Version "+ pdfFile.getVersion() + " Has Been Enabled!");
 	    getServer().getPluginManager().registerEvents(this, this); //register events
 		plugin = this; 
+		
+		configPath = plugin.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
+		config = YamlConfiguration.loadConfiguration(new File(configPath));
+		outConfig = new YamlConfiguration();
+		
 		//save file
 		loadConfig();
 	    FileManager.saveDefaultPlayers();
+	    ScoreManager.saveDefaultScores();
+	    
+	    
+	    getServer().getMessenger().registerOutgoingPluginChannel(this,
+	    		"BungeeCord");
+	    getServer().getMessenger().registerIncomingPluginChannel(this, 
+	    		"BungeeCord", this);
 	}
 	
+	public void sendMessage(Player p)
+	{
+		ByteArrayOutputStream b = new ByteArrayOutputStream();
+		DataOutputStream out = new DataOutputStream(b);
+		System.out.println("blah");
+		try{
+			out.writeUTF("Forward");
+			out.writeUTF("ALL");
+			out.writeUTF("HardcoreSurvival");
+			String msg = "yo yo yo";
+			out.writeUTF(msg);
+			out.writeShort(msg.length());
+			
+		}catch(Exception ex)
+		{
+			//do nothing
+		}
+		
+		p.sendPluginMessage(this, "BungeeCord", b.toByteArray());
+	}
+	
+	@Override
+	public void onPluginMessageReceived(String channel, Player player, byte[] message) {
+		// TODO Auto-generated method stub
+		try{
+			DataInputStream in = new DataInputStream(new ByteArrayInputStream(message));
+			String subchannel = in.readUTF();
+			System.out.println(subchannel);
+			short len = in.readShort();
+			byte[] data = new byte[len];
+			in.readFully(data);
+			
+			String s = new String(data);
+			
+			System.out.println(s);
+		}catch(Exception ex)
+		{
+			ex.printStackTrace();
+		}
+	}	
 	
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event)
@@ -302,6 +361,11 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 				}
 			}
 		}
+		
+		else if(cmd.getName().equalsIgnoreCase("testsend")){
+			sendMessage((Player) sender);
+		}
+		
 		return true;
 	}
 	
