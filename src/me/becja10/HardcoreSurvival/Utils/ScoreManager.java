@@ -1,4 +1,4 @@
-package me.becja10.HardcoreSurvival;
+package me.becja10.HardcoreSurvival.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,10 +28,10 @@ public class ScoreManager
 	 */
 	public static void reloadScores() {
 		if (scores == null)
-			scores = new File(HardcoreSurvival.getInstance().getDataFolder(), "scores.yml");
+			scores = new File(HardcoreSurvival.getPlugin().getDataFolder(), "scores.yml");
 		config = YamlConfiguration.loadConfiguration(scores);
 
-		InputStream defConfigStream = HardcoreSurvival.getInstance().getResource("scores.yml");
+		InputStream defConfigStream = HardcoreSurvival.getPlugin().getResource("scores.yml");
 		if (defConfigStream != null) {
 			@SuppressWarnings("deprecation")
 			YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
@@ -57,8 +57,8 @@ public class ScoreManager
 	 */
 	public static void saveDefaultScores() {
 		if (scores == null)
-			scores = new File(HardcoreSurvival.getInstance().getDataFolder(), "scores.yml");
+			scores = new File(HardcoreSurvival.getPlugin().getDataFolder(), "scores.yml");
 		if (!scores.exists())
-			HardcoreSurvival.getInstance().saveResource("scores.yml", false);
+			HardcoreSurvival.getPlugin().saveResource("scores.yml", false);
 	}
 }

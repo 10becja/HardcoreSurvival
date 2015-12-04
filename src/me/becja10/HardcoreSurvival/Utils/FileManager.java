@@ -1,4 +1,4 @@
-package me.becja10.HardcoreSurvival;
+package me.becja10.HardcoreSurvival.Utils;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,10 +28,10 @@ public class FileManager
 	 */
 	public static void reloadPlayers() {
 		if (players == null)
-			players = new File(HardcoreSurvival.getInstance().getDataFolder(), "players.yml");
+			players = new File(HardcoreSurvival.getPlugin().getDataFolder(), "players.yml");
 		config = YamlConfiguration.loadConfiguration(players);
 
-		InputStream defConfigStream = HardcoreSurvival.getInstance().getResource("players.yml");
+		InputStream defConfigStream = HardcoreSurvival.getPlugin().getResource("players.yml");
 		if (defConfigStream != null) {
 			@SuppressWarnings("deprecation")
 			YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
@@ -57,8 +57,8 @@ public class FileManager
 	 */
 	public static void saveDefaultPlayers() {
 		if (players == null)
-			players = new File(HardcoreSurvival.getInstance().getDataFolder(), "players.yml");
+			players = new File(HardcoreSurvival.getPlugin().getDataFolder(), "players.yml");
 		if (!players.exists())
-			HardcoreSurvival.getInstance().saveResource("players.yml", false);
+			HardcoreSurvival.getPlugin().saveResource("players.yml", false);
 	}
 }
