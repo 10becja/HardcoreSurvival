@@ -1,8 +1,7 @@
 name: HardcoreSurvival
 version: 1.5
 main: me.becja10.HardcoreSurvival.HardcoreSurvival
-softdepend: [GriefPrevention]
-description: Hardcore wrapper plugin for servers running GriefPrevention and Essentials
+description: i dunno yet
 commands:
   setbase:
     description: Stores your location so that you can find your way back with a compass
@@ -11,5 +10,5 @@ commands:
     description: reloads the player database
     usage: /<command>
     aliases: [hcr]
-  testsend:
+  reloadplayers:
     usage: /<command>
