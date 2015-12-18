@@ -12,3 +12,9 @@ commands:
     aliases: [hcr]
   reloadplayers:
     usage: /<command>
+  target:
+    description: Used by zombies to target location or players
+    usage: /<command> <playername>
+  removeprotection:
+    description: Used if you want to remove your newbie status early
+    usage: /<command>

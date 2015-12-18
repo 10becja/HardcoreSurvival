@@ -3,6 +3,7 @@ package me.becja10.HardcoreSurvival.Utils;
 import java.util.UUID;
 
 import me.becja10.HardcoreSurvival.HardcoreSurvival;
+import net.md_5.bungee.api.ChatColor;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -27,6 +28,7 @@ public class PlayerData {
 	public long lastDeath;
 	public Player lastKiller;			//A way to do revenge killings
 	public double maxHealth;
+	public Player target;
 	
 	public PlayerData(Player player)
 	{
@@ -79,6 +81,11 @@ public class PlayerData {
 		timePlayed += timeDiff;
 	}
 	
+	public void setBase(Location l){
+		base = l;
+		savePlayer();
+	}
+	
 	public void savePlayer(){
 		String id = playerID.toString();
 		PlayerManager.getPlayers().set(id+".name", playerName);
@@ -95,6 +102,22 @@ public class PlayerData {
 		
 		PlayerManager.savePlayers();
 		
+	}
+
+	public Location getTargetLocation() {
+		Player p = Bukkit.getPlayer(playerID);
+		if(target == null) return null;
+		if(!target.isOnline())
+		{
+			p.sendMessage(ChatColor.GOLD + "Your target is no longer online.");
+			target = null;
+		}
+		else if(target.getLocation().getWorld() != p.getWorld())
+		{
+			p.sendMessage(ChatColor.GOLD + "Your target is no longer in the same world as you.");
+			target = null;
+		}
+		return target.getLocation();
 	}
 	
 	

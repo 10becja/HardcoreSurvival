@@ -11,6 +11,7 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -21,6 +22,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -38,6 +40,14 @@ public class EntityEventHandler implements Listener {
 			PotionEffectType.HUNGER,
 			PotionEffectType.WEAKNESS,
 			PotionEffectType.SLOW
+			};
+	
+	private EntityType[] bossTypes = new EntityType[]
+			{
+				EntityType.ZOMBIE,
+				EntityType.SKELETON,
+				EntityType.SPIDER,
+				EntityType.WITCH
 			};
 
 	@EventHandler
@@ -59,6 +69,16 @@ public class EntityEventHandler implements Listener {
 		if(pHealth + amount > pd.maxHealth)
 			p.setHealth(pd.maxHealth);
 
+	}
+	
+	@EventHandler
+	public void onSpawn(EntitySpawnEvent event){
+		if(Arrays.asList(bossTypes).contains(event.getEntity().getType()))
+		{
+			LivingEntity mob = (LivingEntity) event.getEntity();
+			mob.setMaxHealth(HardcoreSurvival.instance.bossHealth);
+			mob.setHealth(HardcoreSurvival.instance.bossHealth);
+		}
 	}
 
 	//Don't let hostile mobs target zombie players

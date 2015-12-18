@@ -8,10 +8,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -22,9 +23,6 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-
 import me.becja10.HardcoreSurvival.HardcoreSurvival;
 import me.becja10.HardcoreSurvival.Utils.Messages;
 import me.becja10.HardcoreSurvival.Utils.PlayerData;
@@ -123,7 +121,12 @@ public class PlayerEventHandler implements Listener{
 			p.setFoodLevel(2);
 			
 			//set their xp so that they can find the nearest person
-			Location tar = nearestPlayerLocation(p);
+			Location tar = pd.getTargetLocation();
+			if(tar == null)
+			{
+				pd.target = nearestPlayer(p);
+				p.sendMessage(ChatColor.GREEN + "Targetting the nearest player: " + ChatColor.RED + pd.target.getName());
+			}
 			if(tar != null)
 			{
 				Location eyeLoc = p.getEyeLocation();
@@ -261,13 +264,71 @@ public class PlayerEventHandler implements Listener{
 		Player p = event.getPlayer();
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
 		if(pd.isZombie)
+		{
 			event.setCancelled(true);
+			return;
+		}
 		
+		//only care about when they have a compass
+		if(!(p.getItemInHand().getType() == Material.COMPASS))
+			return;
 		
+		if(event.getAction() == Action.RIGHT_CLICK_AIR)
+		{
+			if(pd.base.getWorld() == null)
+			{
+				p.sendMessage(ChatColor.GOLD + "You have no base set. Pointing to spawn.");
+			}
+			else if(pd.base.getWorld() != p.getLocation().getWorld())
+			{
+				p.sendMessage(ChatColor.GOLD + "Your base is not in this world.");
+			}
+			else
+			{
+				p.setCompassTarget(pd.base);
+				p.sendMessage(ChatColor.GREEN + "Your compass now points towards your base");
+			}
+		}
+		else if(event.getAction() == Action.LEFT_CLICK_AIR)
+		{
+			if(pd.isNewbie)
+			{
+				p.sendMessage(ChatColor.GOLD + "You are still under newbie protection and can not hunt. Use /removeprotection if "
+						+ "you want to end your protection early");
+			}
+			else
+			{
+				if(p.isSneaking())
+				{
+					Entity boss = HardcoreSurvival.instance.boss;
+					if(boss == null)
+						p.sendMessage(ChatColor.RED + "There is no boss to hunt.");
+					else
+					{
+						p.sendMessage(ChatColor.AQUA + "Targetting the last known location of " + boss.getCustomName());
+						p.setCompassTarget(boss.getLocation());
+					}
+				}
+				else
+				{
+					Player tar = nearestPlayer(p);
+					if(tar == null)
+					{
+						p.sendMessage(ChatColor.RED + "There are no players to target.");
+					}
+					else
+					{
+						p.setCompassTarget(tar.getLocation());
+						p.sendMessage(ChatColor.GREEN + "Targetting the last known location of the nearest player. They are "
+								+ p.getLocation().distance(tar.getLocation()) + " blocks away.");
+					}
+				}
+			}
+		}		
 	}
 	
-	private Location nearestPlayerLocation(Player p) {
-		Location ret = null;
+	private Player nearestPlayer(Player p) {
+		Player ret = null;
 		Double far = Double.MAX_VALUE;
 		
 		for(Player t : Bukkit.getOnlinePlayers())
@@ -280,7 +341,7 @@ public class PlayerEventHandler implements Listener{
 			if(dist < far)
 			{
 				far = dist;
-				ret = t.getLocation();
+				ret = t;
 			}
 		}
 		return ret;

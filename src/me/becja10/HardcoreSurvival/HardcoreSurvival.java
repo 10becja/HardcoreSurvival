@@ -6,11 +6,15 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import me.becja10.HardcoreSurvival.Commands.RemoveProtectionCommand;
+import me.becja10.HardcoreSurvival.Commands.SetBaseCommand;
+import me.becja10.HardcoreSurvival.Commands.TargetCommand;
 import me.becja10.HardcoreSurvival.EventHandlers.EntityEventHandler;
 import me.becja10.HardcoreSurvival.EventHandlers.PlayerEventHandler;
 import me.becja10.HardcoreSurvival.Utils.PlayerData;
 import me.becja10.HardcoreSurvival.Utils.PlayerManager;
 import me.becja10.HardcoreSurvival.Utils.LifetimeManager;
+import me.becja10.HardcoreSurvival.Utils.Messages;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -18,6 +22,7 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -29,14 +34,14 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	public final Logger logger = Logger.getLogger("Minecraft");
 	public static HardcoreSurvival instance;
 	
+	public Entity boss = null;
+	
 	//config stuff	
-	public String msgColor;						//Death message color
-	public String banMsg;						//The message to display when a player is banned
-	public String coordsColor;					//customize coords color
 	public boolean newPlayerProtection;			//Whether or not to protect newbies
 	public int newbieTimer;						//How long a new player is on the newbie list
 	public int graceTimer;						//How long a player has after they died
 	public boolean announce;					//if there are other servers we should announce to
+	public int bossHealth;						
 	
 	private String configPath;
 	private FileConfiguration config;
@@ -74,27 +79,29 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	
 	public static HashMap<UUID, PlayerData> players = new HashMap<UUID, PlayerData>();
 	
-	public static PlayerData getPlayerData(Player p) {return players.get(p.getUniqueId());}
+	public static PlayerData getPlayerData(Player p) 
+	{
+		PlayerData pd = players.get(p.getUniqueId());
+		if(pd == null)
+			return new PlayerData(p);
+		return pd;
+	}
 	
 	private void loadConfig()
 	{        
         //load config, creating defaults if they don't exist
-        msgColor = config.getString("msgColor", "f");
-        banMsg = config.getString("banMsg", "You've died! Better luck next time.");
-        coordsColor = config.getString("coordsColor", "f");
         newPlayerProtection = config.getBoolean("newPlayerProtection", true);
         newbieTimer = config.getInt("newbieTimer", 30);
         graceTimer = config.getInt("graceTimer", 5);
         announce = config.getBoolean("announce", false);
+        bossHealth = config.getInt("bossHealth", 500);
         
         //write to output file
-        outConfig.set("msgColor", msgColor);
-        outConfig.set("banMsg", banMsg);
-        outConfig.set("coordsColor", coordsColor);
         outConfig.set("newPlayerProtection", newPlayerProtection);
         outConfig.set("newbieTimer", newbieTimer);
         outConfig.set("graceTimer", graceTimer);
         outConfig.set("announce", announce);
+        outConfig.set("bossHealth", bossHealth);
 		save(outConfig, configPath);
 	}
 	
@@ -105,22 +112,22 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		playerKill3 = scoreConfig.getInt("Killing level 3 player", 1000);
 		zombiePlayerKill = scoreConfig.getInt("Killing zombie player", 1000);
 		
-		blazeMobKill = scoreConfig.getInt("Killing Mobs." + "Killing level 1 player", 1000);
-		creeperMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		endermiteMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		ghastMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		guardianMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		magmacubeMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		skeletonMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		slimeMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		witchMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		witherSkeletonMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		zombieMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		dragonMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		witherMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
-		bossMobKill = scoreConfig.getInt("Killing level 1 player", 1000);
+		blazeMobKill = scoreConfig.getInt("Killing Mobs.blaze", 1000);
+		creeperMobKill = scoreConfig.getInt("Killing Mobs.creeper", 1000);
+		endermiteMobKill = scoreConfig.getInt("Killing Mobs.endermite", 1000);
+		ghastMobKill = scoreConfig.getInt("Killing Mobs.ghast", 1000);
+		guardianMobKill = scoreConfig.getInt("Killing Mobs.guardian", 1000);
+		magmacubeMobKill = scoreConfig.getInt("Killing Mobs.magmacube", 1000);
+		skeletonMobKill = scoreConfig.getInt("Killing Mobs.skeleton", 1000);
+		slimeMobKill = scoreConfig.getInt("Killing Mobs.slime", 1000);
+		witchMobKill = scoreConfig.getInt("Killing Mobs.witch", 1000);
+		witherSkeletonMobKill = scoreConfig.getInt("Killing Mobs.witherSkeleton", 1000);
+		zombieMobKill = scoreConfig.getInt("Killing Mobs.zombie", 1000);
+		dragonMobKill = scoreConfig.getInt("Killing Mobs.dragon", 1000);
+		witherMobKill = scoreConfig.getInt("Killing Mobs.wither", 1000);
+		bossMobKill = scoreConfig.getInt("Killing Mobs.boss", 1000);
 		
-		playtime = scoreConfig.getInt("Killing level 1 player", 1000);
+		playtime = scoreConfig.getInt("Points per second played", 1000);
 		recievingDamage = scoreConfig.getInt("Killing level 1 player", 1000);
 		playerDeath = scoreConfig.getInt("Killing level 1 player", 1000);
 		zombiePlayerDeath = scoreConfig.getInt("Killing level 1 player", 1000);
@@ -193,7 +200,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		{
 			//if is player, and doesn't have permission
 			if((sender instanceof Player) && !(sender.hasPermission("hardcore.reload")))
-					sender.sendMessage(ChatColor.DARK_RED+"No permission.");
+					sender.sendMessage(ChatColor.DARK_RED + Messages.no_permission.getMsg());
 			else
 			{
 				PlayerManager.reloadPlayers();
@@ -203,26 +210,16 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		//setbase
 		else if(cmd.getName().equalsIgnoreCase("setbase"))
 		{
-			if (!(sender instanceof Player))
-				sender.sendMessage("This command can only be run by a player.");
-			else
-			{
-				Player p = (Player) sender;
-				if(!(p.hasPermission("hardcore.setbase")))
-					p.sendMessage(ChatColor.DARK_RED+"You do not have permission to use this command!");
-				else
-				{
-					String id = p.getUniqueId().toString();
-					//save the players location as their base
-					PlayerManager.getPlayers().set(id+".name", p.getName());
-					PlayerManager.getPlayers().set(id+".x", p.getLocation().getX());
-					PlayerManager.getPlayers().set(id+".y", p.getLocation().getY());
-					PlayerManager.getPlayers().set(id+".z", p.getLocation().getZ());
-					PlayerManager.savePlayers();
-					
-					p.sendMessage(ChatColor.GOLD+"Base set!");
-				}
-			}
+			return SetBaseCommand.HandleCommand(sender);
+		}
+		
+		else if(cmd.getName().equalsIgnoreCase("target"))
+		{
+			return TargetCommand.HandleCommand(sender, args);
+		}
+		else if(cmd.getName().equalsIgnoreCase("removeprotection"))
+		{
+			return RemoveProtectionCommand.HandleCommand(sender);
 		}
 		
 		return true;

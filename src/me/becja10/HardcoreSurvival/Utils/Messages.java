@@ -1,12 +1,17 @@
 package me.becja10.HardcoreSurvival.Utils;
 
+import org.bukkit.ChatColor;
+
 public enum Messages {
 	
 	grace_ended("Your grace period has ended."),
 	cant_attack_graced_players(" is under a grace period and can't be attacked"),
-	cant_attack_while_newb("You can't attack players while you're still under newbie grace. Use /endgrace if you want to end your grace period early"), 
+	cant_attack_while_newb("You can't attack players while you're still under newbie protection. Use /removeprotection if you want to attack people"), 
 	newbie_login("You are under newbie protection"),
-	revenge_kill("You have avenged your death!");
+	not_zombie("You are not a zombie!"),
+	revenge_kill("You have avenged your death!"), 
+	player_not_found(ChatColor.RED + "Could not find a player by that name"), 
+	no_permission(ChatColor.DARK_RED + "You do not have permission to use this command.");
 	
 	String msg;
 	
