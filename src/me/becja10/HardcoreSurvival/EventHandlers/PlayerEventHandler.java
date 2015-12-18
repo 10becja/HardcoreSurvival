@@ -80,7 +80,7 @@ public class PlayerEventHandler implements Listener{
 			pd.maxHealth = 10;
 			break;
 		default:
-			pd.maxHealth = 2;
+			pd.maxHealth = 4;
 			break;
 		}
 		
@@ -126,33 +126,41 @@ public class PlayerEventHandler implements Listener{
 			Location tar = nearestPlayerLocation(p);
 			if(tar != null)
 			{
-				Location eye = p.getEyeLocation();
+				Location eyeLoc = p.getEyeLocation();
 				Location offsetTar = new Location(tar.getWorld(), 
-						tar.getX() - eye.getX(),
+						tar.getX() - eyeLoc.getX(),
 						tar.getY(),
-						tar.getZ() - eye.getZ());
-
+						tar.getZ() - eyeLoc.getZ());
+				
+				double x = offsetTar.getX(), z = offsetTar.getZ();
+				int quad;
+								
+				if	   (x < 0 && z > 0) quad = 0;
+				else if(x < 0 && z < 0) quad = 1;
+				else if(x > 0 && z < 0) quad = 2;
+				else   					quad = 3;
+				
 				double angle;
-				long percent = 0;
-				if(offsetTar.getBlockX() == 0)
-				{
-					angle = eye.getPitch();
-					percent = (offsetTar.getBlockZ() > 0) ? 0 : 1;
+				if(x == 0.0)
+					angle = (z > 0) ? 0 : 180;
+				else if(z == 0.0)
+					angle = (x > 0) ? 270 : 90;
+				else{
+					double tx = Math.abs(offsetTar.getX());
+					double tz = Math.abs(offsetTar.getZ());
+					angle = Math.toDegrees(Math.atan2(tx,tz));
+					switch(quad){
+					case 1:	angle = 180 - angle; break;
+					case 2:	angle = 180 + angle; break;
+					case 3: angle = 360 - angle; break;
+					}
 				}
-				else
-				{
-					double sign = Math.abs(offsetTar.getBlockX())/offsetTar.getBlockX();
-					double ratio = Math.abs(offsetTar.getZ()/offsetTar.getX());
-					angle = Math.atan(ratio);
-					if(offsetTar.getBlockZ() < 0) angle += 90;			
-					angle *= sign;
-					percent = Math.round(eye.getPitch() / angle);
-				}
-				System.out.println(percent);
-				p.setLevel((int) percent);
-				p.setExp(percent);
+				double theta = Math.max(eyeLoc.getYaw(), angle) - Math.min(eyeLoc.getYaw(), angle);
+				if(theta > 180) theta = 360 - theta;
+				theta = 1 - (theta/180);
+				p.setLevel((int)Math.round(p.getLocation().distance(tar)));
+				p.setExp((float) theta);				
 			}
-			
 		}
 		
 		else if(pd.isNewbie)

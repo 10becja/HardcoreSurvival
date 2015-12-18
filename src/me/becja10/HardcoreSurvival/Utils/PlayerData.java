@@ -68,7 +68,7 @@ public class PlayerData {
 			maxHealth = 10;
 			break;
 		default:
-			maxHealth = 2;
+			maxHealth = 4;
 			break;
 		}
 		player.setMaxHealth(maxHealth);
