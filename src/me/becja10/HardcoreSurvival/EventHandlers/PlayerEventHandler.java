@@ -8,7 +8,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.entity.Entity;
+import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,12 +23,20 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
 import me.becja10.HardcoreSurvival.HardcoreSurvival;
 import me.becja10.HardcoreSurvival.Utils.Messages;
 import me.becja10.HardcoreSurvival.Utils.PlayerData;
 
 public class PlayerEventHandler implements Listener{
-
+	
+	private PotionEffect strength = new PotionEffect(PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false, false);
+	private PotionEffect speed = new PotionEffect(PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 2, false, false);
+	private PotionEffect night = new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 2, false, false);
+	private PotionEffect hunger = new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 0, true, true);
+	
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event)
 	{
@@ -38,8 +46,14 @@ public class PlayerEventHandler implements Listener{
 		PlayerData kd = (killer == null) ? null : HardcoreSurvival.getPlayerData(killer);
 		
 		pd.deaths++;
-		if(pd.deaths > 2)
+		
+		if(pd.deaths > 2 && !pd.isZombie)
+		{
 			pd.isZombie = true;
+			p.sendMessage(ChatColor.DARK_GREEN + "You are now a zombie!");
+			p.performCommand("abandonallclaims");
+		}
+
 		pd.lastDeath = System.currentTimeMillis();
 		pd.lastKiller = killer;
 		
@@ -47,7 +61,6 @@ public class PlayerEventHandler implements Listener{
 
 		if(kd != null)
 		{
-			//TODO make revenge time configurable
 			if(kd.lastKiller != null && kd.lastKiller.equals(p) && System.currentTimeMillis() - kd.lastDeath <= 1000*60 * HardcoreSurvival.instance.graceTimer)
 			{
 				//TODO bonus score for revenge killing
@@ -118,51 +131,30 @@ public class PlayerEventHandler implements Listener{
 					t.playSound(p.getLocation(), Sound.ZOMBIE_IDLE, 1, 1);
 				}
 			}
-			p.setFoodLevel(2);
+			if(p.getFoodLevel() < 2)
+				p.setFoodLevel(2);
+			
+			if(!p.hasPotionEffect(PotionEffectType.HUNGER))
+				p.addPotionEffect(hunger);
 			
 			//set their xp so that they can find the nearest person
-			Location tar = pd.getTargetLocation();
-			if(tar == null)
+			zombieTargetting(p, pd);
+			
+			if(p.getWorld().getTime() > 14000 )
 			{
-				pd.target = nearestPlayer(p);
-				p.sendMessage(ChatColor.GREEN + "Targetting the nearest player: " + ChatColor.RED + pd.target.getName());
+				p.addPotionEffect(speed);
+				p.addPotionEffect(strength);
+				p.addPotionEffect(night);
 			}
-			if(tar != null)
+			else
 			{
-				Location eyeLoc = p.getEyeLocation();
-				Location offsetTar = new Location(tar.getWorld(), 
-						tar.getX() - eyeLoc.getX(),
-						tar.getY(),
-						tar.getZ() - eyeLoc.getZ());
-				
-				double x = offsetTar.getX(), z = offsetTar.getZ();
-				int quad;
-								
-				if	   (x < 0 && z > 0) quad = 0;
-				else if(x < 0 && z < 0) quad = 1;
-				else if(x > 0 && z < 0) quad = 2;
-				else   					quad = 3;
-				
-				double angle;
-				if(x == 0.0)
-					angle = (z > 0) ? 0 : 180;
-				else if(z == 0.0)
-					angle = (x > 0) ? 270 : 90;
-				else{
-					double tx = Math.abs(offsetTar.getX());
-					double tz = Math.abs(offsetTar.getZ());
-					angle = Math.toDegrees(Math.atan2(tx,tz));
-					switch(quad){
-					case 1:	angle = 180 - angle; break;
-					case 2:	angle = 180 + angle; break;
-					case 3: angle = 360 - angle; break;
+				for(PotionEffect pe : p.getActivePotionEffects())
+				{
+					if(pe.getDuration() > 20L * 1000 && !(pe.getType().equals(PotionEffectType.HUNGER)))
+					{
+						p.removePotionEffect(pe.getType());
 					}
 				}
-				double theta = Math.max(eyeLoc.getYaw(), angle) - Math.min(eyeLoc.getYaw(), angle);
-				if(theta > 180) theta = 360 - theta;
-				theta = 1 - (theta/180);
-				p.setLevel((int)Math.round(p.getLocation().distance(tar)));
-				p.setExp((float) theta);				
 			}
 		}
 		
@@ -186,6 +178,7 @@ public class PlayerEventHandler implements Listener{
 			}
 		}		
 	}
+
 
 	@EventHandler
 	public void onEat(PlayerItemConsumeEvent event)
@@ -275,18 +268,29 @@ public class PlayerEventHandler implements Listener{
 		
 		if(event.getAction() == Action.RIGHT_CLICK_AIR)
 		{
-			if(pd.base.getWorld() == null)
+			if(p.isSneaking())
 			{
-				p.sendMessage(ChatColor.GOLD + "You have no base set. Pointing to spawn.");
-			}
-			else if(pd.base.getWorld() != p.getLocation().getWorld())
-			{
-				p.sendMessage(ChatColor.GOLD + "Your base is not in this world.");
+				if(p.getWorld().getEnvironment() == Environment.NORMAL)
+				{
+					p.setCompassTarget(p.getWorld().getSpawnLocation());
+					p.sendMessage(ChatColor.BLUE + "Pointing towards spawn.");
+				}
 			}
 			else
 			{
-				p.setCompassTarget(pd.base);
-				p.sendMessage(ChatColor.GREEN + "Your compass now points towards your base");
+				if(pd.base.getWorld() == null)
+				{
+					p.sendMessage(ChatColor.GOLD + "You have no base set.");
+				}
+				else if(pd.base.getWorld() != p.getLocation().getWorld())
+				{
+					p.sendMessage(ChatColor.GOLD + "Your base is not in this world.");
+				}
+				else
+				{
+					p.setCompassTarget(pd.base);
+					p.sendMessage(ChatColor.GREEN + "Your compass now points towards your base");
+				}
 			}
 		}
 		else if(event.getAction() == Action.LEFT_CLICK_AIR)
@@ -300,14 +304,14 @@ public class PlayerEventHandler implements Listener{
 			{
 				if(p.isSneaking())
 				{
-					Entity boss = HardcoreSurvival.instance.boss;
-					if(boss == null)
-						p.sendMessage(ChatColor.RED + "There is no boss to hunt.");
-					else
-					{
-						p.sendMessage(ChatColor.AQUA + "Targetting the last known location of " + boss.getCustomName());
-						p.setCompassTarget(boss.getLocation());
-					}
+//					Entity boss = HardcoreSurvival.instance.boss;
+//					if(boss == null)
+//						p.sendMessage(ChatColor.RED + "There is no boss to hunt.");
+//					else
+//					{
+//						p.sendMessage(ChatColor.AQUA + "Targetting the last known location of " + boss.getCustomName());
+//						p.setCompassTarget(boss.getLocation());
+//					}
 				}
 				else
 				{
@@ -326,6 +330,53 @@ public class PlayerEventHandler implements Listener{
 			}
 		}		
 	}
+	
+	private void zombieTargetting(Player p, PlayerData pd) {
+		Location tar = pd.getTargetLocation();
+		if(tar == null)
+		{
+			pd.target = nearestPlayer(p);
+			p.sendMessage(ChatColor.GREEN + "Targetting the nearest player: " + ChatColor.RED + pd.target.getName());
+		}
+		if(tar != null)
+		{
+			Location eyeLoc = p.getEyeLocation();
+			Location offsetTar = new Location(tar.getWorld(), 
+					tar.getX() - eyeLoc.getX(),
+					tar.getY(),
+					tar.getZ() - eyeLoc.getZ());
+			
+			double x = offsetTar.getX(), z = offsetTar.getZ();
+			int quad;
+							
+			if	   (x < 0 && z > 0) quad = 0;
+			else if(x < 0 && z < 0) quad = 1;
+			else if(x > 0 && z < 0) quad = 2;
+			else   					quad = 3;
+			
+			double angle;
+			if(x == 0.0)
+				angle = (z > 0) ? 0 : 180;
+			else if(z == 0.0)
+				angle = (x > 0) ? 270 : 90;
+			else{
+				double tx = Math.abs(offsetTar.getX());
+				double tz = Math.abs(offsetTar.getZ());
+				angle = Math.toDegrees(Math.atan2(tx,tz));
+				switch(quad){
+				case 1:	angle = 180 - angle; break;
+				case 2:	angle = 180 + angle; break;
+				case 3: angle = 360 - angle; break;
+				}
+			}
+			double theta = Math.max(eyeLoc.getYaw(), angle) - Math.min(eyeLoc.getYaw(), angle);
+			if(theta > 180) theta = 360 - theta;
+			theta = 1 - (theta/180);
+			p.setLevel((int)Math.round(p.getLocation().distance(tar)));
+			p.setExp((float) theta);				
+		}
+	}
+
 	
 	private Player nearestPlayer(Player p) {
 		Player ret = null;

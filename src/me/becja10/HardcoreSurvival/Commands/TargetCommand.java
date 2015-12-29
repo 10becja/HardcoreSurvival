@@ -37,15 +37,22 @@ public class TargetCommand {
 			p.sendMessage(ChatColor.AQUA + Messages.not_zombie.getMsg() + " Use a compass to hunt other players.");
 			return true;
 		}
-		
-		Player tar = Bukkit.getPlayer(args[0]);
-		if(tar == null)
+		if(args.length >= 1)
 		{
-			p.sendMessage(Messages.player_not_found.getMsg());
-			return true;
+			Player tar = Bukkit.getPlayer(args[0]);
+			if(tar == null)
+			{
+				p.sendMessage(Messages.player_not_found.getMsg());
+				return true;
+			}
+			pd.target = tar;
+			p.sendMessage(ChatColor.GREEN + "Target aquired. Now targeting " + tar.getName());
 		}
-		pd.target = tar;
-		p.sendMessage(ChatColor.GREEN + "Target aquired");
+		else
+		{
+			pd.target = null;
+			p.sendMessage(ChatColor.GREEN + "Move around to target the nearest player.");
+		}
 		
 		
 		return true;

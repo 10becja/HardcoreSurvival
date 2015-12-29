@@ -13,6 +13,7 @@ import me.becja10.HardcoreSurvival.EventHandlers.EntityEventHandler;
 import me.becja10.HardcoreSurvival.EventHandlers.PlayerEventHandler;
 import me.becja10.HardcoreSurvival.Utils.PlayerData;
 import me.becja10.HardcoreSurvival.Utils.PlayerManager;
+import me.becja10.HardcoreSurvival.Utils.ScoresManager;
 import me.becja10.HardcoreSurvival.Utils.LifetimeManager;
 import me.becja10.HardcoreSurvival.Utils.Messages;
 
@@ -22,7 +23,6 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -34,7 +34,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	public final Logger logger = Logger.getLogger("Minecraft");
 	public static HardcoreSurvival instance;
 	
-	public Entity boss = null;
+//	public Entity boss = null;
 	
 	//config stuff	
 	public boolean newPlayerProtection;			//Whether or not to protect newbies
@@ -127,10 +127,37 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		witherMobKill = scoreConfig.getInt("Killing Mobs.wither", 1000);
 		bossMobKill = scoreConfig.getInt("Killing Mobs.boss", 1000);
 		
-		playtime = scoreConfig.getInt("Points per second played", 1000);
-		recievingDamage = scoreConfig.getInt("Killing level 1 player", 1000);
-		playerDeath = scoreConfig.getInt("Killing level 1 player", 1000);
-		zombiePlayerDeath = scoreConfig.getInt("Killing level 1 player", 1000);
+		 outScoreConfig.set("Points per second played", playtime);
+		 outScoreConfig.set("Killing level 1 player", recievingDamage);
+		 outScoreConfig.set("Killing level 1 player", playerDeath);
+		 outScoreConfig.set("Killing level 1 player", zombiePlayerDeath);
+		
+		 outScoreConfig.set("Killing level 1 player", playerKill1);
+		 outScoreConfig.set("Killing level 2 player", playerKill2);
+		 outScoreConfig.set("Killing level 3 player", playerKill3);
+		 outScoreConfig.set("Killing zombie player", zombiePlayerKill);
+		
+		 outScoreConfig.set("Killing Mobs.blaze", blazeMobKill);
+		 outScoreConfig.set("Killing Mobs.creeper", creeperMobKill);
+		 outScoreConfig.set("Killing Mobs.endermite", endermiteMobKill);
+		 outScoreConfig.set("Killing Mobs.ghast", ghastMobKill);
+		 outScoreConfig.set("Killing Mobs.guardian", guardianMobKill);
+		 outScoreConfig.set("Killing Mobs.magmacube", magmacubeMobKill);
+		 outScoreConfig.set("Killing Mobs.skeleton", skeletonMobKill);
+		 outScoreConfig.set("Killing Mobs.slime", slimeMobKill);
+		 outScoreConfig.set("Killing Mobs.witch", witchMobKill);
+		 outScoreConfig.set("Killing Mobs.witherSkeleton", witherSkeletonMobKill);
+		 outScoreConfig.set("Killing Mobs.zombie", zombieMobKill);
+		 outScoreConfig.set("Killing Mobs.dragon", dragonMobKill);
+		 outScoreConfig.set("Killing Mobs.wither", witherMobKill);
+		 outScoreConfig.set("Killing Mobs.boss", bossMobKill);
+		
+		 outScoreConfig.set("Points per second played", playtime);
+		 outScoreConfig.set("Killing level 1 player", recievingDamage);
+		 outScoreConfig.set("Killing level 1 player", playerDeath);
+		 outScoreConfig.set("Killing level 1 player", zombiePlayerDeath);
+		 
+		 save(outScoreConfig, scoreConfigPath);
 	}
 	
 	@Override
@@ -147,6 +174,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		}
 		LifetimeManager.saveStats();
 		PlayerManager.savePlayers();
+		ScoresManager.saveScores();
 	}
 	
 	@Override
@@ -169,6 +197,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		loadConfig();
 		loadScoreConfig();
 	    PlayerManager.saveDefaultPlayers();
+	    ScoresManager.saveDefaultScores();
 	    LifetimeManager.saveDefaultStats();
 	    
 	    PluginManager pluginManager = getServer().getPluginManager();
@@ -181,6 +210,31 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	    
 	    
 	}
+	
+//	public void ChangeToBoss(LivingEntity mob)
+//	{
+//		Location l = mob.getLocation();
+//		ArmorStand name = (ArmorStand) l.getWorld().spawnEntity(l, EntityType.ARMOR_STAND);
+//		name.setCustomName("Bossy Mob");
+//		name.setCustomNameVisible(true);
+//		name.setVisible(false);
+//		name.setNoDamageTicks(Integer.MAX_VALUE);
+//		name.setRemoveWhenFarAway(false);
+//		
+//		mob.setPassenger(name);
+//		
+//		mob.setMaxHealth(HardcoreSurvival.instance.bossHealth);
+//		mob.setCustomName("Bossy Mob");
+//		mob.setCustomNameVisible(false);
+//		mob.setHealth(HardcoreSurvival.instance.bossHealth);
+//		mob.setRemoveWhenFarAway(false);
+//		mob.getEquipment().setBoots(new ItemStack(Material.DIAMOND_BOOTS));
+//		mob.getEquipment().setLeggings(new ItemStack(Material.DIAMOND_CHESTPLATE));
+//		mob.getEquipment().setChestplate(new ItemStack(Material.DIAMOND_CHESTPLATE));
+//		mob.getEquipment().setHelmet(new ItemStack(Material.DIAMOND_HELMET));
+//		
+//		boss = mob;
+//	}
 	
 	//commands to set your base
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
@@ -204,7 +258,10 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 			else
 			{
 				PlayerManager.reloadPlayers();
+				LifetimeManager.reloadStats();
+				ScoresManager.reloadScores();
 				loadConfig();
+				loadScoreConfig();
 			}
 		}
 		//setbase
@@ -220,6 +277,11 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		else if(cmd.getName().equalsIgnoreCase("removeprotection"))
 		{
 			return RemoveProtectionCommand.HandleCommand(sender);
+		}
+		
+		else if(cmd.getName().equalsIgnoreCase("spawnboss"))
+		{
+			return false;//SpawnBossCommand.HandleCommand(sender, args);
 		}
 		
 		return true;

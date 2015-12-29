@@ -1,6 +1,8 @@
 package me.becja10.HardcoreSurvival.EventHandlers;
 
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.UUID;
 
 import me.becja10.HardcoreSurvival.HardcoreSurvival;
 import me.becja10.HardcoreSurvival.Utils.Messages;
@@ -19,6 +21,8 @@ import org.bukkit.entity.Snowball;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityRegainHealthEvent;
@@ -26,6 +30,7 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PotionSplashEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -33,21 +38,32 @@ public class EntityEventHandler implements Listener {
 
 	private PotionEffectType[] list = new PotionEffectType[]
 			{
-			PotionEffectType.POISON,
-			PotionEffectType.BLINDNESS,
-			PotionEffectType.CONFUSION,
-			PotionEffectType.HARM,
-			PotionEffectType.HUNGER,
-			PotionEffectType.WEAKNESS,
-			PotionEffectType.SLOW
+				PotionEffectType.POISON,
+				PotionEffectType.BLINDNESS,
+				PotionEffectType.CONFUSION,
+				PotionEffectType.HARM,
+				PotionEffectType.HUNGER,
+				PotionEffectType.WEAKNESS,
+				PotionEffectType.SLOW
 			};
 	
-	private EntityType[] bossTypes = new EntityType[]
+	private HashSet<UUID> badSpawns = new HashSet<UUID>();
+	
+//	private EntityType[] bossTypes = new EntityType[]
+//			{
+//				EntityType.ZOMBIE,
+//				EntityType.SKELETON,
+//				EntityType.SPIDER,
+//				EntityType.WITCH
+//			};
+	
+
+
+	private PotionEffect[] zombieEffects = new PotionEffect[]
 			{
-				EntityType.ZOMBIE,
-				EntityType.SKELETON,
-				EntityType.SPIDER,
-				EntityType.WITCH
+				new PotionEffect(PotionEffectType.CONFUSION, 20*20, 4),
+				new PotionEffect(PotionEffectType.POISON, 20*10, 0),
+				new PotionEffect(PotionEffectType.SLOW, 20*15, 3)
 			};
 
 	@EventHandler
@@ -73,12 +89,48 @@ public class EntityEventHandler implements Listener {
 	
 	@EventHandler
 	public void onSpawn(EntitySpawnEvent event){
-		if(Arrays.asList(bossTypes).contains(event.getEntity().getType()))
+		if(event instanceof CreatureSpawnEvent)
 		{
-			LivingEntity mob = (LivingEntity) event.getEntity();
-			mob.setMaxHealth(HardcoreSurvival.instance.bossHealth);
-			mob.setHealth(HardcoreSurvival.instance.bossHealth);
+			if(!((CreatureSpawnEvent) event).getSpawnReason().equals(SpawnReason.NATURAL))
+			{
+				badSpawns.add(event.getEntity().getUniqueId());
+			}
 		}
+		
+//		if(HardcoreSurvival.instance.boss == null)
+//		{
+//			if(Arrays.asList(bossTypes).contains(event.getEntity().getType()))
+//			{
+//				LivingEntity mob = (LivingEntity) event.getEntity();
+//				HardcoreSurvival.instance.ChangeToBoss(mob);
+//			}
+//		}
+	}
+	
+	@EventHandler
+	public void onDeath(EntityDeathEvent event)
+	{
+		if(badSpawns.contains(event.getEntity().getUniqueId()))
+			return;
+		
+		LivingEntity mob = event.getEntity();
+		EntityType type = event.getEntityType();
+		Player p = mob.getKiller();
+		if(p == null)
+			return;
+		
+		PlayerData pd = HardcoreSurvival.getPlayerData(p);
+		pd.addMobKill(type);
+		
+//		if(event.getEntity() == HardcoreSurvival.instance.boss)
+//		{
+//			LivingEntity boss = event.getEntity();
+//			Entity name = boss.getPassenger();
+//			name.remove();	
+//			HardcoreSurvival.instance.boss = null;
+//			//TODO add scoring
+//			
+//		}
 	}
 
 	//Don't let hostile mobs target zombie players
@@ -86,7 +138,7 @@ public class EntityEventHandler implements Listener {
 	public void onTarget(EntityTargetLivingEntityEvent event)
 	{
 		//if the thing targetting is a player, or if the target ISN'T a player, don't do anything
-		if(event.getEntity() instanceof Player || !(event.getTarget() instanceof Player))
+		if(event.getEntity() instanceof Player || !(event.getTarget() instanceof Player) /*|| event.getEntity() == HardcoreSurvival.instance.boss*/)
 			return;
 
 		Player target = (Player) event.getTarget();
@@ -115,7 +167,20 @@ public class EntityEventHandler implements Listener {
 		Player attacker = getAttacker(event);
 		
 		if(attacker == null)
+		{
+//			if(event instanceof EntityDamageByEntityEvent)
+//			{
+//				Entity e = ((EntityDamageByEntityEvent)event).getDamager();
+//				if( e == HardcoreSurvival.instance.boss)
+//				{
+//					if(pd.isZombie)
+//						event.setDamage(event.getDamage() * .25);
+//					else
+//						event.setDamage(event.getDamage() * 4);
+//				}
+//			}
 			return;
+		}
 		
 		PlayerData attackerData = HardcoreSurvival.getPlayerData(attacker);
 		
@@ -136,9 +201,11 @@ public class EntityEventHandler implements Listener {
 			event.setCancelled(true);
 			attacker.sendMessage(ChatColor.RED + p.getName() + Messages.cant_attack_graced_players.getMsg());
 		}
+		else if(attackerData.isZombie)
+		{
+			p.addPotionEffects(Arrays.asList(zombieEffects));
+		}
 	}
-
-
 
 	@EventHandler
 	public void onSplash(PotionSplashEvent e)

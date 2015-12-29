@@ -8,6 +8,7 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 
 public class PlayerData {
@@ -86,8 +87,15 @@ public class PlayerData {
 		savePlayer();
 	}
 	
+	public void addMobKill(EntityType mobType)
+	{
+		
+	}
+	
 	public void savePlayer(){
 		String id = playerID.toString();
+		String world = base.getWorld() == null ? "null" : base.getWorld().getName();
+
 		PlayerManager.getPlayers().set(id+".name", playerName);
 		PlayerManager.getPlayers().set(id+".kills", kills);
 		PlayerManager.getPlayers().set(id+".deaths", deaths);
@@ -97,7 +105,6 @@ public class PlayerData {
 		PlayerManager.getPlayers().set(id+".base.x", base.getX());
 		PlayerManager.getPlayers().set(id+".base.y", base.getY());
 		PlayerManager.getPlayers().set(id+".base.z", base.getZ());
-		String world = base.getWorld() == null ? "null" : base.getWorld().getName();
 		PlayerManager.getPlayers().set(id+".base.world", world);
 		
 		PlayerManager.savePlayers();
@@ -106,7 +113,6 @@ public class PlayerData {
 
 	public Location getTargetLocation() {
 		Player p = Bukkit.getPlayer(playerID);
-		if(target == null) return null;
 		if(!target.isOnline())
 		{
 			p.sendMessage(ChatColor.GOLD + "Your target is no longer online.");
@@ -117,7 +123,7 @@ public class PlayerData {
 			p.sendMessage(ChatColor.GOLD + "Your target is no longer in the same world as you.");
 			target = null;
 		}
-		return target.getLocation();
+		return (target == null) ? null : target.getLocation();
 	}
 	
 	
