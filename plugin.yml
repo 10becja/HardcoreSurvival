@@ -21,3 +21,15 @@ commands:
   spawnboss:
     description: Spawns a boss mob at location
     usage: /<command> <mob type>
+  lost:
+    description: Gives you a compass if you need one
+    usage: /<command>
+  hstop:
+    description: Shows the top 10 players
+    usage: /<command>
+  hsrank:
+    description: Shows your or another player's rank and score
+    usage: /<command> (player)
+  hsstats:
+    description: View hardcore stats
+    usage: /<command> (player)

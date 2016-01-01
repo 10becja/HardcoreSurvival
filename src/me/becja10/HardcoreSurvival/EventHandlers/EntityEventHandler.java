@@ -13,7 +13,6 @@ import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Egg;
 import org.bukkit.entity.EnderPearl;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.FishHook;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -57,8 +56,6 @@ public class EntityEventHandler implements Listener {
 //				EntityType.WITCH
 //			};
 	
-
-
 	private PotionEffect[] zombieEffects = new PotionEffect[]
 			{
 				new PotionEffect(PotionEffectType.CONFUSION, 20*20, 4),
@@ -114,13 +111,12 @@ public class EntityEventHandler implements Listener {
 			return;
 		
 		LivingEntity mob = event.getEntity();
-		EntityType type = event.getEntityType();
 		Player p = mob.getKiller();
 		if(p == null)
 			return;
 		
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
-		pd.addMobKill(type);
+		pd.addMobKill(mob); //this takes care of all scoring and saving
 		
 //		if(event.getEntity() == HardcoreSurvival.instance.boss)
 //		{
@@ -161,7 +157,10 @@ public class EntityEventHandler implements Listener {
 		if(pd.isZombie && !(dc.equals(DamageCause.ENTITY_ATTACK)))
 		{
 			event.setCancelled(true);
+			return;
 		}
+		
+		pd.recievedDamage(event.getDamage());
 
 		//create a null Player in case it turns out the attacker wasn't a player
 		Player attacker = getAttacker(event);

@@ -11,7 +11,9 @@ public enum Messages {
 	not_zombie("You are not a zombie!"),
 	revenge_kill("You have avenged your death!"), 
 	player_not_found(ChatColor.RED + "Could not find a player by that name"), 
-	no_permission(ChatColor.DARK_RED + "You do not have permission to use this command.");
+	no_permission(ChatColor.DARK_RED + "You do not have permission to use this command."), 
+	have_compass(ChatColor.GRAY + "Use your compass to find the way."), 
+	new_compass(ChatColor.GRAY + "Here's a compass. Use it to find your way!");
 	
 	String msg;
 	

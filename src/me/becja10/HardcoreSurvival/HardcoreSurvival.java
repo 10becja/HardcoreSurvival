@@ -6,6 +6,8 @@ import java.util.HashMap;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+import me.becja10.HardcoreSurvival.Commands.LostCommand;
+import me.becja10.HardcoreSurvival.Commands.InfoCommand;
 import me.becja10.HardcoreSurvival.Commands.RemoveProtectionCommand;
 import me.becja10.HardcoreSurvival.Commands.SetBaseCommand;
 import me.becja10.HardcoreSurvival.Commands.TargetCommand;
@@ -28,6 +30,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scoreboard.NameTagVisibility;
+import org.bukkit.scoreboard.Scoreboard;
 
 public class HardcoreSurvival extends JavaPlugin implements Listener
 {
@@ -41,7 +45,9 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	public int newbieTimer;						//How long a new player is on the newbie list
 	public int graceTimer;						//How long a player has after they died
 	public boolean announce;					//if there are other servers we should announce to
-	public int bossHealth;						
+	public int bossHealth;
+	public boolean scaleScores;
+	public int startingScore;
 	
 	private String configPath;
 	private FileConfiguration config;
@@ -52,21 +58,26 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	public int playerKill2;
 	public int playerKill3;
 	public int zombiePlayerKill;
+	public int revengeKill;
 	
 	public int blazeMobKill;
 	public int creeperMobKill;
+	public int elderGuardianMobKill;
+	public int endermanMobKill;
 	public int endermiteMobKill;
 	public int ghastMobKill;
 	public int guardianMobKill;
 	public int magmacubeMobKill;
 	public int skeletonMobKill;
 	public int slimeMobKill;
+	public int spiderMobKill;
 	public int witchMobKill;
 	public int witherSkeletonMobKill;
 	public int zombieMobKill;
 	public int dragonMobKill;
 	public int witherMobKill;
 	public int bossMobKill;
+	
 	
 	public int playtime;
 	public int recievingDamage;
@@ -78,6 +89,8 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	private FileConfiguration outScoreConfig;
 	
 	public static HashMap<UUID, PlayerData> players = new HashMap<UUID, PlayerData>();
+	public static Scoreboard scoreboard;
+	public static final String zombieTeam = "hardcoresurvival_zombies";
 	
 	public static PlayerData getPlayerData(Player p) 
 	{
@@ -95,6 +108,8 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
         graceTimer = config.getInt("graceTimer", 5);
         announce = config.getBoolean("announce", false);
         bossHealth = config.getInt("bossHealth", 500);
+        scaleScores = config.getBoolean("scaleScores", true);
+        startingScore = config.getInt("startingScore", 1000);
         
         //write to output file
         outConfig.set("newPlayerProtection", newPlayerProtection);
@@ -102,60 +117,70 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
         outConfig.set("graceTimer", graceTimer);
         outConfig.set("announce", announce);
         outConfig.set("bossHealth", bossHealth);
+        outConfig.set("scaleScores", scaleScores);
+        outConfig.set("startingScore", startingScore);
 		save(outConfig, configPath);
 	}
 	
 	private void loadScoreConfig()
 	{
 		playerKill1 = scoreConfig.getInt("Killing level 1 player", 1000);
-		playerKill2 = scoreConfig.getInt("Killing level 2 player", 1000);
-		playerKill3 = scoreConfig.getInt("Killing level 3 player", 1000);
-		zombiePlayerKill = scoreConfig.getInt("Killing zombie player", 1000);
+		playerKill2 = scoreConfig.getInt("Killing level 2 player", 750);
+		playerKill3 = scoreConfig.getInt("Killing level 3 player", 500);
+		zombiePlayerKill = scoreConfig.getInt("Killing zombie player", 50);
+		revengeKill = scoreConfig.getInt("Revenge kill bonus", 500);
 		
-		blazeMobKill = scoreConfig.getInt("Killing Mobs.blaze", 1000);
-		creeperMobKill = scoreConfig.getInt("Killing Mobs.creeper", 1000);
-		endermiteMobKill = scoreConfig.getInt("Killing Mobs.endermite", 1000);
-		ghastMobKill = scoreConfig.getInt("Killing Mobs.ghast", 1000);
-		guardianMobKill = scoreConfig.getInt("Killing Mobs.guardian", 1000);
-		magmacubeMobKill = scoreConfig.getInt("Killing Mobs.magmacube", 1000);
-		skeletonMobKill = scoreConfig.getInt("Killing Mobs.skeleton", 1000);
-		slimeMobKill = scoreConfig.getInt("Killing Mobs.slime", 1000);
-		witchMobKill = scoreConfig.getInt("Killing Mobs.witch", 1000);
-		witherSkeletonMobKill = scoreConfig.getInt("Killing Mobs.witherSkeleton", 1000);
-		zombieMobKill = scoreConfig.getInt("Killing Mobs.zombie", 1000);
-		dragonMobKill = scoreConfig.getInt("Killing Mobs.dragon", 1000);
-		witherMobKill = scoreConfig.getInt("Killing Mobs.wither", 1000);
+		blazeMobKill = scoreConfig.getInt("Killing Mobs.blaze", 200);
+		creeperMobKill = scoreConfig.getInt("Killing Mobs.creeper", 250);
+		elderGuardianMobKill = scoreConfig.getInt("Killing Mobs.elderGuardin", 1000);
+		endermanMobKill = scoreConfig.getInt("Killing Mobs.enderman", 300);
+		endermiteMobKill = scoreConfig.getInt("Killing Mobs.endermite", 50);
+		ghastMobKill = scoreConfig.getInt("Killing Mobs.ghast", 150);
+		guardianMobKill = scoreConfig.getInt("Killing Mobs.guardian", 0);
+		magmacubeMobKill = scoreConfig.getInt("Killing Mobs.magmacube", 50);
+		skeletonMobKill = scoreConfig.getInt("Killing Mobs.skeleton", 125);
+		slimeMobKill = scoreConfig.getInt("Killing Mobs.slime", 25);
+		spiderMobKill = scoreConfig.getInt("Killing Mobs.spider", 100);
+		witchMobKill = scoreConfig.getInt("Killing Mobs.witch", 200);
+		witherSkeletonMobKill = scoreConfig.getInt("Killing Mobs.witherSkeleton", 500);
+		zombieMobKill = scoreConfig.getInt("Killing Mobs.zombie", 100);
+		dragonMobKill = scoreConfig.getInt("Killing Mobs.dragon", 10000);
+		witherMobKill = scoreConfig.getInt("Killing Mobs.wither", 5000);
 		bossMobKill = scoreConfig.getInt("Killing Mobs.boss", 1000);
 		
-		 outScoreConfig.set("Points per second played", playtime);
-		 outScoreConfig.set("Killing level 1 player", recievingDamage);
-		 outScoreConfig.set("Killing level 1 player", playerDeath);
-		 outScoreConfig.set("Killing level 1 player", zombiePlayerDeath);
+		playtime = scoreConfig.getInt("Points per second played", 1);
+		recievingDamage = scoreConfig.getInt("Points lost per damage taken", 25);
+		playerDeath = scoreConfig.getInt("Points lost for dying as a player", 1000);
+		zombiePlayerDeath = scoreConfig.getInt("Points lost for dying as a zombie player", 0);
 		
-		 outScoreConfig.set("Killing level 1 player", playerKill1);
-		 outScoreConfig.set("Killing level 2 player", playerKill2);
-		 outScoreConfig.set("Killing level 3 player", playerKill3);
-		 outScoreConfig.set("Killing zombie player", zombiePlayerKill);
+		outScoreConfig.set("Killing level 1 player", playerKill1);
+		outScoreConfig.set("Killing level 2 player", playerKill2);
+		outScoreConfig.set("Killing level 3 player", playerKill3);
+		outScoreConfig.set("Killing zombie player", zombiePlayerKill);
+		outScoreConfig.set("Revenge kill bonus", revengeKill);
 		
-		 outScoreConfig.set("Killing Mobs.blaze", blazeMobKill);
-		 outScoreConfig.set("Killing Mobs.creeper", creeperMobKill);
-		 outScoreConfig.set("Killing Mobs.endermite", endermiteMobKill);
-		 outScoreConfig.set("Killing Mobs.ghast", ghastMobKill);
-		 outScoreConfig.set("Killing Mobs.guardian", guardianMobKill);
-		 outScoreConfig.set("Killing Mobs.magmacube", magmacubeMobKill);
-		 outScoreConfig.set("Killing Mobs.skeleton", skeletonMobKill);
-		 outScoreConfig.set("Killing Mobs.slime", slimeMobKill);
-		 outScoreConfig.set("Killing Mobs.witch", witchMobKill);
-		 outScoreConfig.set("Killing Mobs.witherSkeleton", witherSkeletonMobKill);
-		 outScoreConfig.set("Killing Mobs.zombie", zombieMobKill);
-		 outScoreConfig.set("Killing Mobs.dragon", dragonMobKill);
-		 outScoreConfig.set("Killing Mobs.wither", witherMobKill);
-		 outScoreConfig.set("Killing Mobs.boss", bossMobKill);
+		outScoreConfig.set("Killing Mobs.blaze", blazeMobKill);
+		outScoreConfig.set("Killing Mobs.creeper", creeperMobKill);
+		scoreConfig.getInt("Killing Mobs.elderGuardin", elderGuardianMobKill);
+		scoreConfig.getInt("Killing Mobs.enderman", endermanMobKill);
+		outScoreConfig.set("Killing Mobs.endermite", endermiteMobKill);
+		outScoreConfig.set("Killing Mobs.ghast", ghastMobKill);
+		outScoreConfig.set("Killing Mobs.guardian", guardianMobKill);
+		outScoreConfig.set("Killing Mobs.magmacube", magmacubeMobKill);
+		outScoreConfig.set("Killing Mobs.skeleton", skeletonMobKill);
+		outScoreConfig.set("Killing Mobs.slime", slimeMobKill);
+		outScoreConfig.set("Killing Mobs.spider", spiderMobKill);
+		outScoreConfig.set("Killing Mobs.witch", witchMobKill);
+		outScoreConfig.set("Killing Mobs.witherSkeleton", witherSkeletonMobKill);
+		outScoreConfig.set("Killing Mobs.zombie", zombieMobKill);
+		outScoreConfig.set("Killing Mobs.dragon", dragonMobKill);
+		outScoreConfig.set("Killing Mobs.wither", witherMobKill);
+		outScoreConfig.set("Killing Mobs.boss", bossMobKill);
 		
-		 outScoreConfig.set("Points per second played", playtime);
-		 outScoreConfig.set("Killing level 1 player", recievingDamage);
-		 outScoreConfig.set("Killing level 1 player", playerDeath);
-		 outScoreConfig.set("Killing level 1 player", zombiePlayerDeath);
+		outScoreConfig.set("Points per second played", playtime);
+		outScoreConfig.set("Points lost per damage taken", recievingDamage);
+		outScoreConfig.set("Points lost for dying as a player", playerDeath);
+		outScoreConfig.set("Points lost for dying as a zombie player", zombiePlayerDeath);
 		 
 		 save(outScoreConfig, scoreConfigPath);
 	}
@@ -184,6 +209,13 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		logger.info(pdfFile.getName() + " Version "+ pdfFile.getVersion() + " Has Been Enabled!");
 	    getServer().getPluginManager().registerEvents(this, this); //register events
 		instance = this; 
+		scoreboard = this.getServer().getScoreboardManager().getNewScoreboard();
+		if(scoreboard.getTeam(zombieTeam) == null)
+		{
+			scoreboard.registerNewTeam(zombieTeam).setPrefix(ChatColor.DARK_GREEN + "");
+			scoreboard.getTeam(zombieTeam).setAllowFriendlyFire(false);
+			scoreboard.getTeam(zombieTeam).setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
+		}
 		
 		configPath = instance.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
 		config = YamlConfiguration.loadConfiguration(new File(configPath));
@@ -249,7 +281,6 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 			}
 		}
 		
-		//hardcorereload
 		if(cmd.getName().equalsIgnoreCase("hardcorereload"))
 		{
 			//if is player, and doesn't have permission
@@ -262,27 +293,39 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 				ScoresManager.reloadScores();
 				loadConfig();
 				loadScoreConfig();
+				
+				for(PlayerData pd : players.values())
+					pd.savePlayer();
+				
+				players.clear();
+				for(Player p : Bukkit.getOnlinePlayers())
+					players.put(p.getUniqueId(), new PlayerData(p));
 			}
 		}
-		//setbase
+		
 		else if(cmd.getName().equalsIgnoreCase("setbase"))
-		{
 			return SetBaseCommand.HandleCommand(sender);
-		}
 		
 		else if(cmd.getName().equalsIgnoreCase("target"))
-		{
 			return TargetCommand.HandleCommand(sender, args);
-		}
+		
 		else if(cmd.getName().equalsIgnoreCase("removeprotection"))
-		{
 			return RemoveProtectionCommand.HandleCommand(sender);
-		}
 		
 		else if(cmd.getName().equalsIgnoreCase("spawnboss"))
-		{
-			return false;//SpawnBossCommand.HandleCommand(sender, args);
-		}
+			return true;//SpawnBossCommand.HandleCommand(sender, args);
+		
+		else if(cmd.getName().equalsIgnoreCase("lost"))
+			return LostCommand.HandleCommand(sender);
+		
+		else if(cmd.getName().equalsIgnoreCase("hstop"))
+			return InfoCommand.Top(sender);
+		
+		else if(cmd.getName().equalsIgnoreCase("hsrank"))
+			return InfoCommand.Rank(sender, args);
+		
+		else if(cmd.getName().equalsIgnoreCase("hsstats"))
+			return InfoCommand.Stats(sender, args);
 		
 		return true;
 	}

@@ -24,7 +24,8 @@ public class ScoresManager
 		 * <uuid>:
 		 *   kills:
 		 *   	<all mobs they've killed>: <amount>
-		 *   other ways to get scores: ...
+		 *   death by player:
+		 *   death by environment:
 		 *   
 		 */
 		if (config == null)

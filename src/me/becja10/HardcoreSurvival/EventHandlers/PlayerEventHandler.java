@@ -37,11 +37,15 @@ public class PlayerEventHandler implements Listener{
 	private PotionEffect night = new PotionEffect(PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 2, false, false);
 	private PotionEffect hunger = new PotionEffect(PotionEffectType.HUNGER, Integer.MAX_VALUE, 0, true, true);
 	
+	@SuppressWarnings("deprecation")
 	@EventHandler
 	public void onPlayerDeath(PlayerDeathEvent event)
 	{
 		Player p = event.getEntity();
 		Player killer = p.getKiller();
+		
+		//p.getLastDamageCause()
+		
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
 		PlayerData kd = (killer == null) ? null : HardcoreSurvival.getPlayerData(killer);
 		
@@ -52,23 +56,51 @@ public class PlayerEventHandler implements Listener{
 			pd.isZombie = true;
 			p.sendMessage(ChatColor.DARK_GREEN + "You are now a zombie!");
 			p.performCommand("abandonallclaims");
+			HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.zombieTeam).addPlayer(p);
 		}
 
 		pd.lastDeath = System.currentTimeMillis();
 		pd.lastKiller = killer;
 		
-		//TODO do score stuff
+		int deadScore = (pd.isZombie) ? HardcoreSurvival.instance.zombiePlayerDeath : HardcoreSurvival.instance.playerDeath;
 
 		if(kd != null)
 		{
+			
+			int base = 0; 
+			switch(pd.deaths)
+			{
+				case 1:
+					base = HardcoreSurvival.instance.playerKill1;
+					break;
+				case 2:
+					base = HardcoreSurvival.instance.playerKill2;
+					break;
+				case 3:
+					base = HardcoreSurvival.instance.playerKill3;
+					break;
+				default:
+					base = HardcoreSurvival.instance.zombiePlayerKill;
+			}
+			
+			long ratio = (HardcoreSurvival.instance.scaleScores && !kd.isZombie && !pd.isZombie) ? (pd.score / kd.score) : 1;
+			int kScore = Math.round(ratio * base);
+			deadScore = Math.round(ratio * deadScore);
+			
 			if(kd.lastKiller != null && kd.lastKiller.equals(p) && System.currentTimeMillis() - kd.lastDeath <= 1000*60 * HardcoreSurvival.instance.graceTimer)
 			{
-				//TODO bonus score for revenge killing
+				kScore += HardcoreSurvival.instance.revengeKill;
+				kd.lastKiller = null;
 				killer.sendMessage(ChatColor.DARK_RED + Messages.revenge_kill.getMsg());
 			}
 			kd.kills++;
+			if(pd.score > 0)
+				kd.score += kScore;
 			kd.savePlayer();
-		}		
+		}
+		if(kd == null) pd.envDeaths++;
+		else pd.plrDeaths++;
+		pd.score -= deadScore;
 		pd.savePlayer();
 
 	}
@@ -223,8 +255,6 @@ public class PlayerEventHandler implements Listener{
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
 		pd.updateTime();
 		
-		//TODO do score stuff
-		pd.savePlayer();
 		HardcoreSurvival.players.remove(p.getUniqueId());		
 	}
 
@@ -237,7 +267,7 @@ public class PlayerEventHandler implements Listener{
 			event.setCancelled(true);
 	}
 
-	//Tell players how to use the compass
+	//Force zombies to drop anything in their hand
 	@EventHandler
 	public void changeHand(PlayerItemHeldEvent event)
 	{
