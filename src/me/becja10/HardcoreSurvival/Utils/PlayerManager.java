@@ -27,7 +27,6 @@ public class PlayerManager
    		 *   deaths:
    		 *   score:
 		 *   timePlayed: <in seconds>
-		 *   lastLogin: <time>
 		 *   base:
 		 *     x:
 		 *     y:

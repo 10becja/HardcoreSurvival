@@ -23,9 +23,8 @@ public class PlayerData {
 	public String playerName;
 	public int kills;
 	public int deaths;
-	public int score;
+	public double score;
 	public long timePlayed;
-	public long lastLogin;
 	public Location base; 
 	
 	public Boolean isZombie;
@@ -35,6 +34,7 @@ public class PlayerData {
 	public Player lastKiller;			//A way to do revenge killings
 	public double maxHealth;
 	public Player target;
+	public long lastTimestamp;
 	
 	public int blazeMobKills;
 	public int creeperMobKills;
@@ -66,9 +66,8 @@ public class PlayerData {
 		
 		kills = PlayerManager.getPlayers().getInt(id+".kills", 0);
 		deaths = PlayerManager.getPlayers().getInt(id+".deaths", 0);
-		score = PlayerManager.getPlayers().getInt(id+".score", HardcoreSurvival.instance.startingScore);
+		score = PlayerManager.getPlayers().getDouble(id+".score", (long) HardcoreSurvival.instance.startingScore);
 		timePlayed = PlayerManager.getPlayers().getLong(id+".timePlayed", 0);
-		lastLogin = System.currentTimeMillis();
 		
 		double x, y, z;
 		String worldName;
@@ -80,9 +79,11 @@ public class PlayerData {
 		
 		base = new Location(world, x, y, z);
 		
+		lastTimestamp = System.currentTimeMillis();
 		isGraced = false;
 		isZombie = deaths > 2;
 		if(isZombie) HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.zombieTeam).addPlayer(player);
+		else HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.playerTeam).addPlayer(player);
 
 		isNewbie = (!PlayerManager.getPlayers().contains(id)) || 
 				   (PlayerManager.getPlayers().getLong(id+".timePlayed") < HardcoreSurvival.instance.newbieTimer * 60000);
@@ -125,19 +126,28 @@ public class PlayerData {
 		
 		plrDeaths = ScoresManager.getScores().getInt(id+"death by player", 0);
 		envDeaths = ScoresManager.getScores().getInt(id+"death by environment", 0);
+		
+		savePlayer();
 	}
 	
 	public void updateTime(){
-		long timeDiff = System.currentTimeMillis() - lastLogin;
-		
-		timePlayed += timeDiff;
-		score += HardcoreSurvival.instance.playtime * (timeDiff/1000);
-		savePlayer();
+		long timeDiff = (System.currentTimeMillis() - lastTimestamp)/1000;
+						
+		if(timeDiff > 0 )
+		{
+			lastTimestamp = System.currentTimeMillis();
+
+			timePlayed += timeDiff;
+			
+			score += (HardcoreSurvival.instance.playtime) * (timeDiff / (double) 60);
+			savePlayer();
+		}
 	}
 	
 	public void recievedDamage(double damage)
 	{
 		score -= HardcoreSurvival.instance.recievingDamage * damage;
+		if(score < 0) score = 0;
 		savePlayer();
 	}
 	
@@ -242,7 +252,6 @@ public class PlayerData {
 		PlayerManager.getPlayers().set(id+".deaths", deaths);
 		PlayerManager.getPlayers().set(id+".score", score);
 		PlayerManager.getPlayers().set(id+".timePlayed", timePlayed);
-		PlayerManager.getPlayers().set(id+".lastLogin", lastLogin);
 		PlayerManager.getPlayers().set(id+".base.x", base.getX());
 		PlayerManager.getPlayers().set(id+".base.y", base.getY());
 		PlayerManager.getPlayers().set(id+".base.z", base.getZ());
@@ -265,8 +274,8 @@ public class PlayerData {
 		ScoresManager.getScores().set(id+".kills.wither", witherMobKills);
 		ScoresManager.getScores().set(id+".kills.boss", bossMobKills);
 		
-		ScoresManager.getScores().set(id+"death by player", plrDeaths);
-		ScoresManager.getScores().set(id+"death by environment", envDeaths);
+		ScoresManager.getScores().set(id+".death by player", plrDeaths);
+		ScoresManager.getScores().set(id+".death by environment", envDeaths);
 		
 		ScoresManager.saveScores();
 		PlayerManager.savePlayers();
@@ -275,6 +284,7 @@ public class PlayerData {
 
 	public Location getTargetLocation() {
 		Player p = Bukkit.getPlayer(playerID);
+		if(target == null) return null;
 		if(!target.isOnline())
 		{
 			p.sendMessage(ChatColor.GOLD + "Your target is no longer online.");

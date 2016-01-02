@@ -4,13 +4,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 
+import me.becja10.HardcoreSurvival.HardcoreSurvival;
 import me.becja10.HardcoreSurvival.Utils.Messages;
+import me.becja10.HardcoreSurvival.Utils.PlayerData;
 import me.becja10.HardcoreSurvival.Utils.PlayerManager;
 
 public class InfoCommand {
@@ -20,12 +23,13 @@ public class InfoCommand {
 	public static boolean Top(CommandSender sender) 
 	{
 		
-		if(!sender.hasPermission("hardcoresurvival.command.hstop"))
+		if(!sender.hasPermission("hardcoresurvival.command.top"))
 		{
 			sender.sendMessage(Messages.no_permission.getMsg());
 			return true;
 		}
 		
+		updatePlayers();		
 		final FileConfiguration players = PlayerManager.getPlayers();
 		List<String> list = getSortedList(players);
 		
@@ -46,8 +50,6 @@ public class InfoCommand {
 		return true;
 	}
 
-
-	
 	public static boolean Rank(CommandSender sender, String[] args) 
 	{
 		if (!(sender instanceof Player) && args.length == 0)
@@ -55,19 +57,20 @@ public class InfoCommand {
 			sender.sendMessage("This command can only be run by a player.");
 			return true;
 		}
+		updatePlayers();		
 		final FileConfiguration players = PlayerManager.getPlayers();
 		List<String> list = getSortedList(players);
 		
 		if(args.length == 0)
 		{
-			if(!sender.hasPermission("hardcoresurvival.command.hsrank"))
+			if(!sender.hasPermission("hardcoresurvival.command.rank"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
 			}
 			
 			Player p = (Player) sender;
-			int rank = list.indexOf(p.getUniqueId().toString());
+			int rank = list.indexOf(p.getUniqueId().toString()) + 1;
 			
 			p.sendMessage(ChatColor.DARK_AQUA+"You are ranked " + ChatColor.YELLOW  + rank 
 					+ ChatColor.DARK_AQUA + " out of " + ChatColor.YELLOW + list.size());
@@ -75,7 +78,7 @@ public class InfoCommand {
 		}
 		else
 		{
-			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.hsrank.others"))
+			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.rank.others"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -105,11 +108,12 @@ public class InfoCommand {
 			sender.sendMessage("This command can only be run by a player.");
 			return true;
 		}
+		updatePlayers();		
 		final FileConfiguration players = PlayerManager.getPlayers();
 		
 		if(args.length == 0)
 		{
-			if(!sender.hasPermission("hardcoresurvival.command.hsstats"))
+			if(!sender.hasPermission("hardcoresurvival.command.stats"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -122,7 +126,7 @@ public class InfoCommand {
 		}
 		else
 		{
-			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.hsstats.others"))
+			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.stats.others"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -160,7 +164,7 @@ public class InfoCommand {
 		sender.sendMessage("  " + ChatColor.AQUA + "Score: " + ChatColor.YELLOW + players.getInt(id+".score"));
 		sender.sendMessage("  " + ChatColor.DARK_PURPLE + "Time Played: " + ChatColor.YELLOW + FormatTime(players.getInt(id+".timePlayed")));
 		
-		sender.sendMessage(ChatColor.DARK_AQUA + "Use " + ChatColor.YELLOW + "/hrrank " + players.getString(id+".name") + 
+		sender.sendMessage(ChatColor.DARK_AQUA + "Use " + ChatColor.YELLOW + "/hsrank " + players.getString(id+".name") + 
 				ChatColor.DARK_AQUA + " to see their ranking." );
 	}
 	
@@ -171,15 +175,22 @@ public class InfoCommand {
 		{
 			int hours = (t / 3600); //how many hours
 			int min = ((t - (hours * 3600))/60);// left over minutes
-			time = hours + " hour(s) " + min + " minutes";
+			int sec = (t - (hours * 3600) - (min * 60));
+			String sHour = (hours > 1) ? " hours " : " hour ";
+			String sMin = (min > 1) ? " minutes " : " minute ";
+			String sSec = (sec > 1) ? " seconds" : " second";
+			time = hours + sHour + min + sMin + sec + sSec;
 		}
 		else if (t >= 60)
 		{
 			int min = t/60;
-			time = min + " minutes";
+			int sec = ((t - (min * 60)));
+			String sMin = (min > 1) ? " minutes " : " minute ";
+			String sSec = (sec > 1) ? " seconds" : " second";
+			time = min + sMin + sec + sSec;
 		}
 		else
-			time = t + " seconds";
+			time = t + ((t > 1) ? " seconds" : " second");
 		
 		return time;
 	}
@@ -192,9 +203,17 @@ public class InfoCommand {
 			public int compare(String o1, String o2) {
 				int i1 = players.getInt(o1+".score");
 				int i2 = players.getInt(o2+".score");				
-				return i1 < i2 ? -1 : i1 == 12 ? 0 : 1;
+				return i1 > i2 ? -1 : i1 == 12 ? 0 : 1;
 			}			
 		});
 		return list;
+	}
+	
+	private static void updatePlayers() {
+		for(PlayerData pd : HardcoreSurvival.players.values())
+		{
+			pd.updateTime();
+		}
+		
 	}
 }

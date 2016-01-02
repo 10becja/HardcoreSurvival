@@ -1,4 +1,4 @@
-//package me.becja10.HardcoreSurvival.Commands;
+package me.becja10.HardcoreSurvival.Commands;
 //
 //import org.bukkit.Location;
 //import org.bukkit.command.CommandSender;
@@ -9,7 +9,7 @@
 //import me.becja10.HardcoreSurvival.HardcoreSurvival;
 //import me.becja10.HardcoreSurvival.Utils.Messages;
 //
-//public class SpawnBossCommand {
+public class SpawnBossCommand {
 //
 //	public static boolean HandleCommand(CommandSender sender, String[] args)
 //	{
@@ -38,4 +38,4 @@
 //		
 //		return true;
 //	}
-//}
+}

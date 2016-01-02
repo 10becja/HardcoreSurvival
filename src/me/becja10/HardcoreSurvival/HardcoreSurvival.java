@@ -90,7 +90,8 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	
 	public static HashMap<UUID, PlayerData> players = new HashMap<UUID, PlayerData>();
 	public static Scoreboard scoreboard;
-	public static final String zombieTeam = "hardcoresurvival_zombies";
+	public static final String zombieTeam = "hcs_zombies";
+	public static final String playerTeam = "hcs_players";
 	
 	public static PlayerData getPlayerData(Player p) 
 	{
@@ -102,6 +103,10 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	
 	private void loadConfig()
 	{        
+		configPath = instance.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
+		config = YamlConfiguration.loadConfiguration(new File(configPath));
+		outConfig = new YamlConfiguration();		
+		
         //load config, creating defaults if they don't exist
         newPlayerProtection = config.getBoolean("newPlayerProtection", true);
         newbieTimer = config.getInt("newbieTimer", 30);
@@ -124,6 +129,10 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	
 	private void loadScoreConfig()
 	{
+		scoreConfigPath = instance.getDataFolder().getAbsolutePath() + File.separator + "scoreConfig.yml";
+		scoreConfig = YamlConfiguration.loadConfiguration(new File(scoreConfigPath));
+		outScoreConfig = new YamlConfiguration();
+		
 		playerKill1 = scoreConfig.getInt("Killing level 1 player", 1000);
 		playerKill2 = scoreConfig.getInt("Killing level 2 player", 750);
 		playerKill3 = scoreConfig.getInt("Killing level 3 player", 500);
@@ -148,7 +157,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		witherMobKill = scoreConfig.getInt("Killing Mobs.wither", 5000);
 		bossMobKill = scoreConfig.getInt("Killing Mobs.boss", 1000);
 		
-		playtime = scoreConfig.getInt("Points per second played", 1);
+		playtime = scoreConfig.getInt("Points per minute played", 5);
 		recievingDamage = scoreConfig.getInt("Points lost per damage taken", 25);
 		playerDeath = scoreConfig.getInt("Points lost for dying as a player", 1000);
 		zombiePlayerDeath = scoreConfig.getInt("Points lost for dying as a zombie player", 0);
@@ -161,8 +170,8 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		
 		outScoreConfig.set("Killing Mobs.blaze", blazeMobKill);
 		outScoreConfig.set("Killing Mobs.creeper", creeperMobKill);
-		scoreConfig.getInt("Killing Mobs.elderGuardin", elderGuardianMobKill);
-		scoreConfig.getInt("Killing Mobs.enderman", endermanMobKill);
+		outScoreConfig.set("Killing Mobs.elderGuardin", elderGuardianMobKill);
+		outScoreConfig.set("Killing Mobs.enderman", endermanMobKill);
 		outScoreConfig.set("Killing Mobs.endermite", endermiteMobKill);
 		outScoreConfig.set("Killing Mobs.ghast", ghastMobKill);
 		outScoreConfig.set("Killing Mobs.guardian", guardianMobKill);
@@ -177,7 +186,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		outScoreConfig.set("Killing Mobs.wither", witherMobKill);
 		outScoreConfig.set("Killing Mobs.boss", bossMobKill);
 		
-		outScoreConfig.set("Points per second played", playtime);
+		outScoreConfig.set("Points per minute played", playtime);
 		outScoreConfig.set("Points lost per damage taken", recievingDamage);
 		outScoreConfig.set("Points lost for dying as a player", playerDeath);
 		outScoreConfig.set("Points lost for dying as a zombie player", zombiePlayerDeath);
@@ -195,7 +204,6 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		for(PlayerData pd : players.values())
 		{
 			pd.updateTime();
-			pd.savePlayer();
 		}
 		LifetimeManager.saveStats();
 		PlayerManager.savePlayers();
@@ -209,21 +217,17 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		logger.info(pdfFile.getName() + " Version "+ pdfFile.getVersion() + " Has Been Enabled!");
 	    getServer().getPluginManager().registerEvents(this, this); //register events
 		instance = this; 
-		scoreboard = this.getServer().getScoreboardManager().getNewScoreboard();
+		scoreboard = this.getServer().getScoreboardManager().getMainScoreboard();
 		if(scoreboard.getTeam(zombieTeam) == null)
 		{
 			scoreboard.registerNewTeam(zombieTeam).setPrefix(ChatColor.DARK_GREEN + "");
 			scoreboard.getTeam(zombieTeam).setAllowFriendlyFire(false);
 			scoreboard.getTeam(zombieTeam).setNameTagVisibility(NameTagVisibility.HIDE_FOR_OTHER_TEAMS);
 		}
-		
-		configPath = instance.getDataFolder().getAbsolutePath() + File.separator + "config.yml";
-		config = YamlConfiguration.loadConfiguration(new File(configPath));
-		outConfig = new YamlConfiguration();
-		
-		scoreConfigPath = instance.getDataFolder().getAbsolutePath() + File.separator + "scoreConfig.yml";
-		scoreConfig = YamlConfiguration.loadConfiguration(new File(scoreConfigPath));
-		outScoreConfig = new YamlConfiguration();
+		if(scoreboard.getTeam(playerTeam) == null)
+		{
+			scoreboard.registerNewTeam(playerTeam).setAllowFriendlyFire(true);
+		}
 		
 		//save file
 		loadConfig();
@@ -270,17 +274,7 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 	
 	//commands to set your base
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
-	{
-		
-		if(cmd.getName().equalsIgnoreCase("reloadplayers"))
-		{
-			players.clear();
-			for(Player p : Bukkit.getOnlinePlayers())
-			{
-				players.put(p.getUniqueId(), new PlayerData(p));
-			}
-		}
-		
+	{	
 		if(cmd.getName().equalsIgnoreCase("hardcorereload"))
 		{
 			//if is player, and doesn't have permission
@@ -303,6 +297,24 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 			}
 		}
 		
+		else if(cmd.getName().equalsIgnoreCase("curezombie"))
+		{
+			if(args.length != 1) return false;
+			if((sender instanceof Player) && !(sender.hasPermission("hardcore.curezombie")))
+				sender.sendMessage(ChatColor.DARK_RED + Messages.no_permission.getMsg());
+			else
+			{
+				Player p = Bukkit.getPlayer(args[0]);
+				if(p == null) sender.sendMessage(Messages.player_not_found.getMsg());
+				else
+				{
+					PlayerData pd = getPlayerData(p);
+					pd.deaths = 0;
+					pd.savePlayer();					
+				}
+			}
+		}
+		
 		else if(cmd.getName().equalsIgnoreCase("setbase"))
 			return SetBaseCommand.HandleCommand(sender);
 		
@@ -318,13 +330,13 @@ public class HardcoreSurvival extends JavaPlugin implements Listener
 		else if(cmd.getName().equalsIgnoreCase("lost"))
 			return LostCommand.HandleCommand(sender);
 		
-		else if(cmd.getName().equalsIgnoreCase("hstop"))
+		else if(cmd.getName().equalsIgnoreCase("top"))
 			return InfoCommand.Top(sender);
 		
-		else if(cmd.getName().equalsIgnoreCase("hsrank"))
+		else if(cmd.getName().equalsIgnoreCase("rank"))
 			return InfoCommand.Rank(sender, args);
 		
-		else if(cmd.getName().equalsIgnoreCase("hsstats"))
+		else if(cmd.getName().equalsIgnoreCase("stats"))
 			return InfoCommand.Stats(sender, args);
 		
 		return true;

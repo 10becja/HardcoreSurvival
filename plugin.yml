@@ -1,7 +1,7 @@
 name: HardcoreSurvival
-version: 1.5
+version: 2.0
 main: me.becja10.HardcoreSurvival.HardcoreSurvival
-description: i dunno yet
+description: Adds new features to make regular survival a bit more interesting. Introduces ZOMBIE PLAYERS!
 commands:
   setbase:
     description: Stores your location so that you can find your way back with a compass
@@ -9,7 +9,6 @@ commands:
   hardcorereload:
     description: reloads the player database
     usage: /<command>
-    aliases: [hcr]
   reloadplayers:
     usage: /<command>
   target:
@@ -24,12 +23,15 @@ commands:
   lost:
     description: Gives you a compass if you need one
     usage: /<command>
-  hstop:
+  top:
     description: Shows the top 10 players
     usage: /<command>
-  hsrank:
+    aliases: [hctop, htop, hct, ht]
+  rank:
     description: Shows your or another player's rank and score
     usage: /<command> (player)
-  hsstats:
+    aliases: [hcrank, hrank, hcr, hr]
+  stats:
     description: View hardcore stats
     usage: /<command> (player)
+    aliases: [hcstats, hstats, hcs, hs]

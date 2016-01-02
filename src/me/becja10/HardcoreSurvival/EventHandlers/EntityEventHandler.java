@@ -37,30 +37,30 @@ public class EntityEventHandler implements Listener {
 
 	private PotionEffectType[] list = new PotionEffectType[]
 			{
-				PotionEffectType.POISON,
-				PotionEffectType.BLINDNESS,
-				PotionEffectType.CONFUSION,
-				PotionEffectType.HARM,
-				PotionEffectType.HUNGER,
-				PotionEffectType.WEAKNESS,
-				PotionEffectType.SLOW
+			PotionEffectType.POISON,
+			PotionEffectType.BLINDNESS,
+			PotionEffectType.CONFUSION,
+			PotionEffectType.HARM,
+			PotionEffectType.HUNGER,
+			PotionEffectType.WEAKNESS,
+			PotionEffectType.SLOW
 			};
-	
+
 	private HashSet<UUID> badSpawns = new HashSet<UUID>();
-	
-//	private EntityType[] bossTypes = new EntityType[]
-//			{
-//				EntityType.ZOMBIE,
-//				EntityType.SKELETON,
-//				EntityType.SPIDER,
-//				EntityType.WITCH
-//			};
-	
+
+	//	private EntityType[] bossTypes = new EntityType[]
+	//			{
+	//				EntityType.ZOMBIE,
+	//				EntityType.SKELETON,
+	//				EntityType.SPIDER,
+	//				EntityType.WITCH
+	//			};
+
 	private PotionEffect[] zombieEffects = new PotionEffect[]
 			{
-				new PotionEffect(PotionEffectType.CONFUSION, 20*20, 4),
-				new PotionEffect(PotionEffectType.POISON, 20*10, 0),
-				new PotionEffect(PotionEffectType.SLOW, 20*15, 3)
+			new PotionEffect(PotionEffectType.CONFUSION, 20*20, 4),
+			new PotionEffect(PotionEffectType.POISON, 20*10, 0),
+			new PotionEffect(PotionEffectType.SLOW, 20*15, 3)
 			};
 
 	@EventHandler
@@ -83,7 +83,7 @@ public class EntityEventHandler implements Listener {
 			p.setHealth(pd.maxHealth);
 
 	}
-	
+
 	@EventHandler
 	public void onSpawn(EntitySpawnEvent event){
 		if(event instanceof CreatureSpawnEvent)
@@ -93,40 +93,46 @@ public class EntityEventHandler implements Listener {
 				badSpawns.add(event.getEntity().getUniqueId());
 			}
 		}
-		
-//		if(HardcoreSurvival.instance.boss == null)
-//		{
-//			if(Arrays.asList(bossTypes).contains(event.getEntity().getType()))
-//			{
-//				LivingEntity mob = (LivingEntity) event.getEntity();
-//				HardcoreSurvival.instance.ChangeToBoss(mob);
-//			}
-//		}
+
+		//		if(HardcoreSurvival.instance.boss == null)
+		//		{
+		//			if(Arrays.asList(bossTypes).contains(event.getEntity().getType()))
+		//			{
+		//				LivingEntity mob = (LivingEntity) event.getEntity();
+		//				HardcoreSurvival.instance.ChangeToBoss(mob);
+		//			}
+		//		}
 	}
-	
+
 	@EventHandler
 	public void onDeath(EntityDeathEvent event)
 	{
 		if(badSpawns.contains(event.getEntity().getUniqueId()))
 			return;
-		
+
 		LivingEntity mob = event.getEntity();
 		Player p = mob.getKiller();
 		if(p == null)
 			return;
-		
+
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
 		pd.addMobKill(mob); //this takes care of all scoring and saving
-		
-//		if(event.getEntity() == HardcoreSurvival.instance.boss)
-//		{
-//			LivingEntity boss = event.getEntity();
-//			Entity name = boss.getPassenger();
-//			name.remove();	
-//			HardcoreSurvival.instance.boss = null;
-//			//TODO add scoring
-//			
-//		}
+		if(pd.isZombie)
+		{
+			double food = p.getFoodLevel() + (mob.getMaxHealth()/2);
+			p.setFoodLevel((int) Math.min(food, 10));
+			p.setHealth(p.getMaxHealth());
+		}
+
+		//		if(event.getEntity() == HardcoreSurvival.instance.boss)
+		//		{
+		//			LivingEntity boss = event.getEntity();
+		//			Entity name = boss.getPassenger();
+		//			name.remove();	
+		//			HardcoreSurvival.instance.boss = null;
+		//			//TODO add scoring
+		//			
+		//		}
 	}
 
 	//Don't let hostile mobs target zombie players
@@ -140,7 +146,16 @@ public class EntityEventHandler implements Listener {
 		Player target = (Player) event.getTarget();
 		PlayerData td = HardcoreSurvival.getPlayerData(target);
 		if(td.isZombie)
+		{
+			Entity entity = event.getEntity();
+			if(entity.getLastDamageCause() instanceof EntityDamageByEntityEvent)
+			{
+				Entity damager = ((EntityDamageByEntityEvent) entity.getLastDamageCause()).getDamager();
+				if(damager.equals(target))
+					return;
+			}
 			event.setTarget(null);
+		}
 
 	}
 
@@ -148,61 +163,66 @@ public class EntityEventHandler implements Listener {
 	public void onDamage(EntityDamageEvent event)
 	{
 		//also only concerned if the thing being damaged is a Player
-		if(!(event.getEntity() instanceof Player)) return;
+		if(!(event.getEntity() instanceof Player)){
+			if(event.getEntity() instanceof LivingEntity)
+			{
+				Player attacker = getAttacker(event);
+				if(attacker != null)
+				{
+					PlayerData attackerData = HardcoreSurvival.getPlayerData(attacker);
+					if(attackerData.isZombie)
+					{
+						((LivingEntity) event.getEntity()).addPotionEffects(Arrays.asList(zombieEffects));
+						event.setDamage(Math.max(1, attacker.getFoodLevel()/2));
+					}
+				}
+			}
+		}
+		else
+		{
+			Player p = (Player) event.getEntity();
+			PlayerData pd = HardcoreSurvival.getPlayerData(p);
+			DamageCause dc = event.getCause();
+			//zombies can't be hurt by most damage
+			if(pd.isZombie && !(dc.equals(DamageCause.ENTITY_ATTACK) || dc.equals(DamageCause.ENTITY_EXPLOSION) || dc.equals(DamageCause.PROJECTILE)))
+			{
+				event.setCancelled(true);
+				return;
+			}
 
-		Player p = (Player) event.getEntity();
-		PlayerData pd = HardcoreSurvival.getPlayerData(p);
-		DamageCause dc = event.getCause();
-		//zombies can't be hurt by most damage
-		if(pd.isZombie && !(dc.equals(DamageCause.ENTITY_ATTACK)))
-		{
-			event.setCancelled(true);
-			return;
-		}
-		
-		pd.recievedDamage(event.getDamage());
+			//create a null Player in case it turns out the attacker wasn't a player
+			Player attacker = getAttacker(event);
 
-		//create a null Player in case it turns out the attacker wasn't a player
-		Player attacker = getAttacker(event);
-		
-		if(attacker == null)
-		{
-//			if(event instanceof EntityDamageByEntityEvent)
-//			{
-//				Entity e = ((EntityDamageByEntityEvent)event).getDamager();
-//				if( e == HardcoreSurvival.instance.boss)
-//				{
-//					if(pd.isZombie)
-//						event.setDamage(event.getDamage() * .25);
-//					else
-//						event.setDamage(event.getDamage() * 4);
-//				}
-//			}
-			return;
-		}
-		
-		PlayerData attackerData = HardcoreSurvival.getPlayerData(attacker);
-		
-		//at this point, we know it's a player attacking another player
-		if(attackerData.isGraced)
-		{
-			attackerData.isGraced = false;
-			attacker.sendMessage(ChatColor.RED + Messages.grace_ended.getMsg());
-		}
-		else if(attackerData.isNewbie)
-		{
-			event.setCancelled(true);
-			attacker.sendMessage(ChatColor.GOLD + Messages.cant_attack_while_newb.getMsg());
-		}
-		
-		else if(pd.isGraced || pd.isNewbie)
-		{
-			event.setCancelled(true);
-			attacker.sendMessage(ChatColor.RED + p.getName() + Messages.cant_attack_graced_players.getMsg());
-		}
-		else if(attackerData.isZombie)
-		{
-			p.addPotionEffects(Arrays.asList(zombieEffects));
+			if(attacker != null)
+			{
+				PlayerData attackerData = HardcoreSurvival.getPlayerData(attacker);
+
+				//at this point, we know it's a player attacking another player
+				if(attackerData.isGraced)
+				{
+					attackerData.isGraced = false;
+					attacker.sendMessage(ChatColor.RED + Messages.grace_ended.getMsg());
+				}
+				else if(attackerData.isNewbie)
+				{
+					event.setCancelled(true);
+					attacker.sendMessage(ChatColor.GOLD + Messages.cant_attack_while_newb.getMsg());
+				}
+
+				else if(pd.isGraced || pd.isNewbie)
+				{
+					event.setCancelled(true);
+					attacker.sendMessage(ChatColor.RED + p.getName() + Messages.cant_attack_graced_players.getMsg());
+				}
+				else if(attackerData.isZombie)
+				{
+					p.addPotionEffects(Arrays.asList(zombieEffects));
+					event.setDamage(Math.max(1, attacker.getFoodLevel()/2));
+				}
+			}
+
+			if(!event.isCancelled())
+				pd.recievedDamage(event.getDamage());
 		}
 	}
 
@@ -221,7 +241,7 @@ public class EntityEventHandler implements Listener {
 				{					
 					Player hit = (Player) thing;
 					if(hit.equals(thrower)) continue;
-					
+
 					PlayerData hitData = HardcoreSurvival.getPlayerData(hit);
 					if(hitData.isGraced || hitData.isNewbie)
 					{						
@@ -243,7 +263,7 @@ public class EntityEventHandler implements Listener {
 	{
 		if(!(event instanceof EntityDamageByEntityEvent))
 			return null;
-		
+
 		Entity damageSource = ((EntityDamageByEntityEvent)event).getDamager();
 		Player attacker = null;
 
