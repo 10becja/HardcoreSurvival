@@ -17,6 +17,9 @@ commands:
   removeprotection:
     description: Used if you want to remove your newbie status early
     usage: /<command>
+  curezombie:
+    description: Cures zombieness
+    usage: /<command>
   spawnboss:
     description: Spawns a boss mob at location
     usage: /<command> <mob type>
