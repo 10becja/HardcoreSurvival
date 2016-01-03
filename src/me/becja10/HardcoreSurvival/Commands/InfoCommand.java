@@ -113,7 +113,7 @@ public class InfoCommand {
 		
 		if(args.length == 0)
 		{
-			if(!sender.hasPermission("hardcoresurvival.command.stats"))
+			if(!sender.hasPermission("hardcore.command.stats"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -164,7 +164,7 @@ public class InfoCommand {
 		sender.sendMessage("  " + ChatColor.AQUA + "Score: " + ChatColor.YELLOW + players.getInt(id+".score"));
 		sender.sendMessage("  " + ChatColor.DARK_PURPLE + "Time Played: " + ChatColor.YELLOW + FormatTime(players.getInt(id+".timePlayed")));
 		
-		sender.sendMessage(ChatColor.DARK_AQUA + "Use " + ChatColor.YELLOW + "/hsrank " + players.getString(id+".name") + 
+		sender.sendMessage(ChatColor.DARK_AQUA + "Use " + ChatColor.YELLOW + "/rank " + players.getString(id+".name") + 
 				ChatColor.DARK_AQUA + " to see their ranking." );
 	}
 	

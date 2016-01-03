@@ -1,5 +1,6 @@
 package me.becja10.HardcoreSurvival.EventHandlers;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
 
 import net.md_5.bungee.api.ChatColor;
@@ -42,6 +43,27 @@ public class PlayerEventHandler implements Listener {
 			PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 2, false, false);
 	private PotionEffect hunger = new PotionEffect(PotionEffectType.HUNGER,
 			Integer.MAX_VALUE, 0, true, true);
+	
+	private Material[] breakable = new Material[]{
+		Material.WOODEN_DOOR, Material.FENCE, Material.FENCE_GATE,
+		Material.SPRUCE_DOOR, Material.SPRUCE_FENCE, Material.SPRUCE_FENCE_GATE,
+		Material.BIRCH_DOOR, Material.BIRCH_FENCE, Material.BIRCH_FENCE_GATE,
+		Material.JUNGLE_DOOR, Material.JUNGLE_FENCE, Material.JUNGLE_FENCE_GATE,
+		Material.ACACIA_DOOR, Material.ACACIA_FENCE, Material.ACACIA_FENCE_GATE,
+		Material.DARK_OAK_DOOR, Material.DARK_OAK_FENCE, Material.DARK_OAK_FENCE_GATE,
+		Material.DIRT,
+		Material.SAND,
+		Material.GRASS,
+		Material.MYCEL,
+		Material.WOOD,
+		Material.LEAVES,
+		Material.LEAVES_2,
+		Material.GLASS,
+		Material.STAINED_GLASS,
+		Material.STAINED_GLASS_PANE,
+		Material.THIN_GLASS,
+		Material.TRAP_DOOR,		
+	};
 
 	@SuppressWarnings("deprecation")
 	@EventHandler
@@ -297,6 +319,12 @@ public class PlayerEventHandler implements Listener {
 		Player p = event.getPlayer();
 		PlayerData pd = HardcoreSurvival.getPlayerData(p);
 		if (pd.isZombie) {
+			if(event.getAction() == Action.LEFT_CLICK_BLOCK)
+			{
+				Material mat = event.getClickedBlock().getType();
+				if(Arrays.asList(breakable).contains(mat))
+					return;
+			}
 			event.setCancelled(true);
 			return;
 		}

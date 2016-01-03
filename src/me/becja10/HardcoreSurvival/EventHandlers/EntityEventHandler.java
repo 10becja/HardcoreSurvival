@@ -19,6 +19,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Snowball;
 import org.bukkit.entity.ThrownPotion;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
@@ -159,9 +160,11 @@ public class EntityEventHandler implements Listener {
 
 	}
 
-	@EventHandler
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void onDamage(EntityDamageEvent event)
 	{
+		if(event.isCancelled()) return;
+		
 		//also only concerned if the thing being damaged is a Player
 		if(!(event.getEntity() instanceof Player)){
 			if(event.getEntity() instanceof LivingEntity)
