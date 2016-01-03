@@ -24,7 +24,7 @@ public class TargetCommand {
 			return false;
 		
 		Player p = (Player) sender;
-		if(!p.hasPermission("hardcoresurvival.command.target"))
+		if(!p.hasPermission("hardcore.command.target"))
 		{
 			sender.sendMessage(Messages.no_permission.getMsg());
 			return true;

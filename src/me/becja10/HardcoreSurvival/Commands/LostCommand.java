@@ -18,7 +18,7 @@ public class LostCommand {
 		}
 		
 		Player p = (Player) sender;
-		if(!p.hasPermission("hardcoresurvival.command.lost"))
+		if(!p.hasPermission("hardcore.command.lost"))
 		{
 			sender.sendMessage(Messages.no_permission.getMsg());
 			return true;

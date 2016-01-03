@@ -23,7 +23,7 @@ public class InfoCommand {
 	public static boolean Top(CommandSender sender) 
 	{
 		
-		if(!sender.hasPermission("hardcoresurvival.command.top"))
+		if(!sender.hasPermission("hardcore.command.top"))
 		{
 			sender.sendMessage(Messages.no_permission.getMsg());
 			return true;
@@ -63,7 +63,7 @@ public class InfoCommand {
 		
 		if(args.length == 0)
 		{
-			if(!sender.hasPermission("hardcoresurvival.command.rank"))
+			if(!sender.hasPermission("hardcore.command.rank"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -78,7 +78,7 @@ public class InfoCommand {
 		}
 		else
 		{
-			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.rank.others"))
+			if(sender instanceof Player && !sender.hasPermission("hardcore.command.rank.others"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;
@@ -126,7 +126,7 @@ public class InfoCommand {
 		}
 		else
 		{
-			if(sender instanceof Player && !sender.hasPermission("hardcoresurvival.command.stats.others"))
+			if(sender instanceof Player && !sender.hasPermission("hardcore.command.stats.others"))
 			{
 				sender.sendMessage(Messages.no_permission.getMsg());
 				return true;

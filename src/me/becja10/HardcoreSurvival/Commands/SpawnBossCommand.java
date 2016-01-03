@@ -20,7 +20,7 @@ public class SpawnBossCommand {
 //		}
 //		
 //		Player p = (Player) sender;
-//		if(!p.hasPermission("hardcoresurvival.command.spawnboss"))
+//		if(!p.hasPermission("hardcore.command.spawnboss"))
 //		{
 //			sender.sendMessage(Messages.no_permission.getMsg());
 //			return true;

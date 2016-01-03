@@ -18,7 +18,7 @@ public class RemoveProtectionCommand {
 			return true;
 		}
 		Player p = (Player) sender;
-		if(!p.hasPermission("hardcoresurvival.command.removeprotection"))
+		if(!p.hasPermission("hardcore.command.removeprotection"))
 		{
 			sender.sendMessage(Messages.no_permission.getMsg());
 			return true;
