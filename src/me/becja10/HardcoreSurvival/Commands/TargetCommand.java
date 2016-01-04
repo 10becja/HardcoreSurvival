@@ -45,8 +45,16 @@ public class TargetCommand {
 				p.sendMessage(Messages.player_not_found.getMsg());
 				return true;
 			}
-			pd.target = tar;
-			p.sendMessage(ChatColor.GREEN + "Target aquired. Now targeting " + tar.getName());
+			if(tar.equals(p))
+			{
+				p.sendMessage(ChatColor.GOLD + "You can't target yourself!");
+			}
+			else
+			{
+				pd.target = tar;
+				p.sendMessage(ChatColor.GREEN + "Target aquired. Now targeting " + tar.getName());
+			}
+			
 		}
 		else
 		{

@@ -441,6 +441,10 @@ public class PlayerEventHandler implements Listener {
 			theta = 1 - (theta / 180);
 			p.setLevel((int) Math.round(p.getLocation().distance(tar)));
 			p.setExp((float) theta);
+			if(theta > 1)
+			{
+				System.out.println("[DEBUG] theta: " + theta + " quad: " + quad + " angle: " + angle + " x: " + x + " z: " + z + " yaw: " + eyeLoc.getYaw());
+			}
 		}
 		else
 		{
