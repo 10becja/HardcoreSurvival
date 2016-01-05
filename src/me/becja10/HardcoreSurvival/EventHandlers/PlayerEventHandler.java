@@ -398,6 +398,7 @@ public class PlayerEventHandler implements Listener {
 		}
 		if (tar != null) {
 			Location eyeLoc = p.getEyeLocation();
+			float yaw = Math.abs(eyeLoc.getYaw());
 			Location offsetTar = new Location(tar.getWorld(), tar.getX()
 					- eyeLoc.getX(), tar.getY(), tar.getZ() - eyeLoc.getZ());
 
@@ -434,8 +435,8 @@ public class PlayerEventHandler implements Listener {
 					break;
 				}
 			}
-			double theta = Math.max(eyeLoc.getYaw(), angle)
-					- Math.min(eyeLoc.getYaw(), angle);
+			double theta = Math.max(yaw, angle)
+					- Math.min(yaw, angle);
 			if (theta > 180)
 				theta = 360 - theta;
 			theta = 1 - (theta / 180);
