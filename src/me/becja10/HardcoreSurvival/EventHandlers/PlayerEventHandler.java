@@ -12,6 +12,7 @@ import org.bukkit.Sound;
 import org.bukkit.World.Environment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -141,7 +142,7 @@ public class PlayerEventHandler implements Listener {
 
 	}
 
-	@EventHandler
+	@EventHandler(priority=EventPriority.HIGHEST)
 	public void onRespawn(PlayerRespawnEvent event) {
 		final Player p = event.getPlayer();
 		final PlayerData pd = HardcoreSurvival.getPlayerData(p);
@@ -225,8 +226,8 @@ public class PlayerEventHandler implements Listener {
 		}
 
 		else if (pd.isGraced) {
-			long currentSession = System.currentTimeMillis() - pd.lastTimestamp;
-			if (pd.timePlayed + currentSession > HardcoreSurvival.instance.graceTimer * 1000 * 60) {
+			long timeDiff = System.currentTimeMillis() - pd.lastDeath;
+			if (timeDiff > HardcoreSurvival.instance.graceTimer * 1000 * 60) {
 				pd.isGraced = false;
 				p.sendMessage(ChatColor.RED + Messages.grace_ended.getMsg());
 			}

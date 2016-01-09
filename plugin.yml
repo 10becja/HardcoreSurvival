@@ -9,8 +9,6 @@ commands:
   hardcorereload:
     description: reloads the player database
     usage: /<command>
-  reloadplayers:
-    usage: /<command>
   target:
     description: Used by zombies to target location or players
     usage: /<command> <playername>
