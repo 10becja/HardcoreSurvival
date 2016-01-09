@@ -82,6 +82,7 @@ public class PlayerEventHandler implements Listener {
 		if (pd.deaths > 2 && !pd.isZombie) {
 			pd.isZombie = true;
 			p.sendMessage(ChatColor.DARK_GREEN + "You are now a zombie!");
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "pex user " + p.getName() + " group set immune");
 			p.performCommand("abandonallclaims");
 			HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.zombieTeam)
 					.addPlayer(p);

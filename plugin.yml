@@ -19,7 +19,7 @@ commands:
     usage: /<command>
   curezombie:
     description: Cures zombieness
-    usage: /<command>
+    usage: /<command> <player>
   spawnboss:
     description: Spawns a boss mob at location
     usage: /<command> <mob type>

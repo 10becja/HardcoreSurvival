@@ -162,7 +162,7 @@ public class InfoCommand {
 		sender.sendMessage("  " + ChatColor.RED + "Kills: " + ChatColor.YELLOW + players.getInt(id+".kills"));
 		sender.sendMessage("  " + ChatColor.GRAY + "Deaths: " + ChatColor.YELLOW + players.getInt(id+".deaths"));
 		sender.sendMessage("  " + ChatColor.AQUA + "Score: " + ChatColor.YELLOW + players.getInt(id+".score"));
-		sender.sendMessage("  " + ChatColor.DARK_PURPLE + "Time Played: " + ChatColor.YELLOW + FormatTime(players.getInt(id+".timePlayed")));
+		sender.sendMessage("  " + ChatColor.DARK_PURPLE + "Time Played: " + ChatColor.YELLOW + FormatTime(players.getInt(id+".timePlayed")/1000));
 		
 		sender.sendMessage(ChatColor.DARK_AQUA + "Use " + ChatColor.YELLOW + "/rank " + players.getString(id+".name") + 
 				ChatColor.DARK_AQUA + " to see their ranking." );

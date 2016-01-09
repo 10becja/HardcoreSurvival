@@ -25,10 +25,10 @@ public class PlayerData {
 	public int deaths;
 	public double score;
 	public long timePlayed;
+	public Boolean isNewbie;
 	public Location base; 
 	
 	public Boolean isZombie;
-	public Boolean isNewbie;
 	public Boolean isGraced;
 	public long lastDeath;
 	public Player lastKiller;			//A way to do revenge killings
@@ -68,6 +68,7 @@ public class PlayerData {
 		deaths = PlayerManager.getPlayers().getInt(id+".deaths", 0);
 		score = PlayerManager.getPlayers().getDouble(id+".score", (long) HardcoreSurvival.instance.startingScore);
 		timePlayed = PlayerManager.getPlayers().getLong(id+".timePlayed", 0);
+		isNewbie = PlayerManager.getPlayers().getBoolean(id+".isNewbie", true);
 		
 		double x, y, z;
 		String worldName;
@@ -85,8 +86,7 @@ public class PlayerData {
 		if(isZombie) HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.zombieTeam).addPlayer(player);
 		else HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.playerTeam).addPlayer(player);
 
-		isNewbie = (!PlayerManager.getPlayers().contains(id)) || 
-				   (PlayerManager.getPlayers().getLong(id+".timePlayed") < HardcoreSurvival.instance.newbieTimer * 60000);
+		isNewbie = (isNewbie && (timePlayed < HardcoreSurvival.instance.newbieTimer * 60000));
 		lastDeath = 0;
 		lastKiller = null;
 		switch(deaths)
@@ -252,6 +252,7 @@ public class PlayerData {
 		PlayerManager.getPlayers().set(id+".deaths", deaths);
 		PlayerManager.getPlayers().set(id+".score", score);
 		PlayerManager.getPlayers().set(id+".timePlayed", timePlayed);
+		PlayerManager.getPlayers().set(id+".isNewbie", isNewbie);
 		PlayerManager.getPlayers().set(id+".base.x", base.getX());
 		PlayerManager.getPlayers().set(id+".base.y", base.getY());
 		PlayerManager.getPlayers().set(id+".base.z", base.getZ());
