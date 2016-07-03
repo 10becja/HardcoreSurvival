@@ -201,8 +201,8 @@ public class InfoCommand {
 		Collections.sort(list, new Comparator<String>(){
 			@Override
 			public int compare(String o1, String o2) {
-				int i1 = players.getInt(o1+".score");
-				int i2 = players.getInt(o2+".score");				
+				double i1 = players.getDouble(o1+".score");
+				double i2 = players.getDouble(o2+".score");				
 				return i1 > i2 ? -1 : i1 == 12 ? 0 : 1;
 			}			
 		});

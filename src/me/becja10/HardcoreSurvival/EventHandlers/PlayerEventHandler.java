@@ -35,10 +35,10 @@ import me.becja10.HardcoreSurvival.Utils.PlayerData;
 
 public class PlayerEventHandler implements Listener {
 
-	private PotionEffect strength = new PotionEffect(PotionEffectType.SPEED,
+	private PotionEffect strength = new PotionEffect(PotionEffectType.INCREASE_DAMAGE,
 			Integer.MAX_VALUE, 2, false, false);
 	private PotionEffect speed = new PotionEffect(
-			PotionEffectType.INCREASE_DAMAGE, Integer.MAX_VALUE, 2, false,
+			PotionEffectType.SPEED, Integer.MAX_VALUE, 2, false,
 			false);
 	private PotionEffect night = new PotionEffect(
 			PotionEffectType.NIGHT_VISION, Integer.MAX_VALUE, 2, false, false);
@@ -83,7 +83,7 @@ public class PlayerEventHandler implements Listener {
 		if (pd.deaths > 2 && !pd.isZombie) {
 			pd.isZombie = true;
 			p.sendMessage(ChatColor.DARK_GREEN + "You are now a zombie!");
-			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "pex user " + p.getName() + " group set immune");
+			Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "pex user " + p.getName() + " group add immune");
 			p.performCommand("abandonallclaims");
 			HardcoreSurvival.scoreboard.getTeam(HardcoreSurvival.zombieTeam)
 					.addPlayer(p);
@@ -217,7 +217,7 @@ public class PlayerEventHandler implements Listener {
 			}
 		}
 
-		else if (pd.isNewbie) {
+		if (pd.isNewbie) {
 			long currentSession = System.currentTimeMillis() - pd.lastTimestamp;
 			if (pd.timePlayed + currentSession > HardcoreSurvival.instance.newbieTimer * 1000 * 60) {
 				pd.isNewbie = false;

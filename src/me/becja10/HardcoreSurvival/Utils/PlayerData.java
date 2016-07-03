@@ -131,15 +131,16 @@ public class PlayerData {
 	}
 	
 	public void updateTime(){
-		long timeDiff = (System.currentTimeMillis() - lastTimestamp)/1000;
+		long timeDiff = (System.currentTimeMillis() - lastTimestamp);
+		int seconds = (int) (timeDiff/1000);
 						
-		if(timeDiff > 0 )
+		if(seconds > 0 )
 		{
 			lastTimestamp = System.currentTimeMillis();
 
 			timePlayed += timeDiff;
 			
-			score += (HardcoreSurvival.instance.playtime) * (timeDiff / (double) 60);
+			score += (HardcoreSurvival.instance.playtime) * (seconds / (double) 60);
 			savePlayer();
 		}
 	}
